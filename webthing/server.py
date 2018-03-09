@@ -9,44 +9,30 @@ from .utils import get_ip
 
 
 class BaseHandler(tornado.web.RequestHandler):
-    """Base handler that is initialized with things."""
+    """Base handler that is initialized with a thing."""
 
-    def initialize(self, things, ip, port):
+    def initialize(self, thing):
         """
         Initialize the handler.
 
-        things -- dict of things managed by the server
-        ip -- local IP address of the server
-        port -- port the server is listening on
+        thing -- the Thing managed by this server
         """
-        self.things = things
-        self.ws_path = 'ws://{}:{}'.format(ip, port)
-
-
-class ThingsHandler(BaseHandler):
-    """Handle a request to /things."""
-
-    def get(self):
-        """Handle a GET request."""
-        self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps([t.as_thing(ws_path=self.ws_path)
-                               for t in self.things.values()]))
+        self.thing = thing
 
 
 class ThingHandler(tornado.websocket.WebSocketHandler):
-    """Handle a request to /things/<thing>."""
+    """Handle a request to /."""
 
-    def initialize(self, things, ip, port):
+    def initialize(self, thing, ip, port):
         """
         Initialize the handler.
 
-        things -- dict of things managed by the server
+        thing -- the Thing managed by this server
         ip -- local IP address of the server
         port -- port the server is listening on
         """
-        self.things = things
-        self.ws_path = 'ws://{}:{}'.format(ip, port)
-        self.thing_name = None
+        self.thing = thing
+        self.ws_path = 'ws://{}:{}/'.format(ip, port)
 
     @tornado.web.asynchronous
     def get(self, *args, **kwargs):
@@ -55,23 +41,13 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
             tornado.websocket.WebSocketHandler.get(self, *args, **kwargs)
             return
 
-        thing_name = args[0]
-        if thing_name in self.things:
-            self.set_header('Content-Type', 'application/json')
-            self.write(json.dumps(
-                self.things[thing_name].as_thing(ws_path=self.ws_path)))
-        else:
-            self.set_status(404)
-
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(self.thing.as_thing(ws_path=self.ws_path)))
         self.finish()
 
-    def open(self, thing_name):
-        """
-        Handle a new connection.
-
-        thing_name -- the name of the thing from the URL path
-        """
-        self.thing_name = thing_name
+    def open(self):
+        """Handle a new connection."""
+        pass
 
     def on_message(self, message):
         """
@@ -79,18 +55,6 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
 
         message -- message to handle
         """
-        if self.thing_name not in self.things:
-            self.send_message(json.dumps({
-                'messageType': 'error',
-                'data': {
-                    'status': '404 Not Found',
-                    'message': 'Thing ' + self.thing_name + ' not found',
-                },
-            }))
-            return
-
-        thing = self.things[self.thing_name]
-
         try:
             message = json.loads(message)
         except ValueError:
@@ -116,7 +80,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
         msg_type = message['messageType']
         if msg_type == 'setProperty':
             for property_name, property_value in message['data'].items():
-                thing.set_property(property_name, property_value)
+                self.thing.set_property(property_name, property_value)
         elif msg_type == 'requestAction':
             pass
         elif msg_type == 'addEventSubscription':
@@ -141,43 +105,34 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
 
 
 class PropertiesHandler(BaseHandler):
-    """Handle a request to /things/<thing>/properties."""
+    """Handle a request to /properties."""
 
-    def get(self, thing_name):
-        """
-        Handle a GET request.
-
-        thing_name -- the name of the thing from the URL path
-        """
+    def get(self):
+        """Handle a GET request."""
         pass
 
 
 class PropertyHandler(BaseHandler):
-    """Handle a request to /things/<thing>/properties/<property>."""
+    """Handle a request to /properties/<property>."""
 
-    def get(self, thing_name, property_name):
+    def get(self, property_name):
         """
         Handle a GET request.
 
-        thing_name -- the name of the thing from the URL path
         property_name -- the name of the property from the URL path
         """
-        if thing_name in self.things:
-            thing = self.things[thing_name]
-            if thing.has_property(property_name):
-                self.set_header('Content-Type', 'application/json')
-                self.write(json.dumps({
-                    property_name: thing.get_property(property_name),
-                }))
-                return
+        if self.thing.has_property(property_name):
+            self.set_header('Content-Type', 'application/json')
+            self.write(json.dumps({
+                property_name: self.thing.get_property(property_name),
+            }))
+        else:
+            self.set_status(404)
 
-        self.set_status(404)
-
-    def put(self, thing_name, property_name):
+    def put(self, property_name):
         """
         Handle a PUT request.
 
-        thing_name -- the name of the thing from the URL path
         property_name -- the name of the property from the URL path
         """
         try:
@@ -190,83 +145,65 @@ class PropertyHandler(BaseHandler):
             self.set_status(400)
             return
 
-        if thing_name in self.things:
-            thing = self.things[thing_name]
-            if thing.has_property(property_name):
-                thing.set_property(property_name, args[property_name])
-                self.set_status(200)
-                return
-
-        self.set_status(404)
+        if self.thing.has_property(property_name):
+            self.thing.set_property(property_name, args[property_name])
+            self.set_status(200)
+        else:
+            self.set_status(404)
 
 
 class ActionsHandler(BaseHandler):
-    """Handle a request to /things/<thing>/actions."""
+    """Handle a request to /actions."""
 
-    def get(self, thing_name):
-        """
-        Handle a GET request.
-
-        thing_name -- the name of the thing from the URL path
-        """
+    def get(self):
+        """Handle a GET request."""
         pass
 
-    def post(self, thing_name):
-        """
-        Handle a POST request.
-
-        thing_name -- the name of the thing from the URL path
-        """
+    def post(self):
+        """Handle a POST request."""
         pass
 
 
 class ActionHandler(BaseHandler):
-    """Handle a request to /things/<thing>/actions/<action>."""
+    """Handle a request to /actions/<action>."""
 
-    def get(self, thing_name, action_id):
+    def get(self, action_id):
         """
         Handle a GET request.
 
-        thing_name -- the name of the thing from the URL path
         action_id -- the action ID from the URL path
         """
         pass
 
-    def put(self, thing_name, action_id):
+    def put(self, action_id):
         """
         Handle a PUT request.
 
-        thing_name -- the name of the thing from the URL path
         action_id -- the action ID from the URL path
         """
         pass
 
-    def delete(self, thing_name, action_id):
+    def delete(self, action_id):
         """
         Handle a DELETE request.
 
-        thing_name -- the name of the thing from the URL path
         action_id -- the action ID from the URL path
         """
         pass
 
 
 class EventsHandler(BaseHandler):
-    """Handle a request to /things/<thing>/events."""
+    """Handle a request to /events."""
 
-    def get(self, thing_name):
-        """
-        Handle a GET request.
-
-        thing_name -- the name of the thing from the URL path
-        """
+    def get(self):
+        """Handle a GET request."""
         pass
 
 
 class WebThingServer:
     """Server to represent a Web Thing over HTTP."""
 
-    def __init__(self, port=80):
+    def __init__(self, thing, port=80):
         """
         Initialize the WebThingServer.
 
@@ -274,43 +211,38 @@ class WebThingServer:
         """
         self.ip = get_ip()
         self.port = port
-        self.things = {}
+        self.thing = thing
 
         self.app = tornado.web.Application([
             (
-                r'/things/?',
-                ThingsHandler,
-                dict(things=self.things, ip=self.ip, port=self.port),
-            ),
-            (
-                r'/things/([^/]+)/?',
+                r'/?',
                 ThingHandler,
-                dict(things=self.things, ip=self.ip, port=self.port),
+                dict(thing=self.thing, ip=self.ip, port=self.port),
             ),
             (
-                r'/things/([^/]+)/properties/?',
+                r'/properties/?',
                 PropertiesHandler,
-                dict(things=self.things, ip=self.ip, port=self.port),
+                dict(thing=self.thing),
             ),
             (
-                r'/things/([^/]+)/properties/([^/]+)/?',
+                r'/properties/([^/]+)/?',
                 PropertyHandler,
-                dict(things=self.things, ip=self.ip, port=self.port),
+                dict(thing=self.thing),
             ),
             (
-                r'/things/([^/]+)/actions/?',
+                r'/actions/?',
                 ActionsHandler,
-                dict(things=self.things, ip=self.ip, port=self.port),
+                dict(thing=self.thing),
             ),
             (
-                r'/things/([^/]+)/actions/([^/]+)/?',
+                r'/actions/([^/]+)/?',
                 ActionHandler,
-                dict(things=self.things, ip=self.ip, port=self.port),
+                dict(thing=self.thing),
             ),
             (
-                r'/things/([^/]+)/events/?',
+                r'/events/?',
                 EventsHandler,
-                dict(things=self.things, ip=self.ip, port=self.port),
+                dict(thing=self.thing),
             ),
         ])
 
@@ -318,20 +250,3 @@ class WebThingServer:
         """Start listening for incoming connections."""
         self.app.listen(self.port)
         tornado.ioloop.IOLoop.current().start()
-
-    def add_thing(self, thing):
-        """
-        Add a thing to the server.
-
-        thing -- Thing to add
-        """
-        self.things[thing.name] = thing
-
-    def remove_thing(self, thing):
-        """
-        Remove a thing from the server.
-
-        thing -- Thing to remove
-        """
-        if thing.name in self.things:
-            del self.things[thing.name]

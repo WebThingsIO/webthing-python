@@ -2,7 +2,7 @@ from webthing import Property, Thing, WebThingServer
 
 
 if __name__ == '__main__':
-    thing = Thing('pi', description='A WoT-connected Raspberry Pi')
+    thing = Thing(name='WoT Pi', description='A WoT-connected Raspberry Pi')
 
     thing.add_property(
         Property(thing,
@@ -21,6 +21,5 @@ if __name__ == '__main__':
                  {'type': 'boolean',
                   'description': 'A red LED'}))
 
-    server = WebThingServer(port=8888)
-    server.add_thing(thing)
+    server = WebThingServer(thing, port=8888)
     server.start()

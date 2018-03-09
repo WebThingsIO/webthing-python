@@ -4,15 +4,15 @@
 class Thing:
     """A Web Thing."""
 
-    def __init__(self, name, _type='thing', description=''):
+    def __init__(self, name='', type_='thing', description=''):
         """
         Initialize the object.
 
         name -- the thing's name
-        _type -- the thing's type
+        type_ -- the thing's type
         description -- description of the thing
         """
-        self.type = _type
+        self.type = type_
         self.name = name
         self.description = description
         self.properties = {}
@@ -27,20 +27,20 @@ class Thing:
         """
         thing = {
             'name': self.name,
+            'href': '/',
             'type': self.type,
             'properties': self.get_property_descriptions(),
             'actions': self.actions,
             'events': self.events,
             'links': {
-                'properties': '/thing/{}/properties'.format(self.name),
-                'actions': '/thing/{}/actions'.format(self.name),
-                'events': '/thing/{}/events'.format(self.name),
+                'properties': '/properties',
+                'actions': '/actions',
+                'events': '/events',
             },
         }
 
         if ws_path is not None:
-            thing['links']['websocket'] = \
-                '{}/things/{}'.format(ws_path, self.name)
+            thing['links']['websocket'] = ws_path
 
         if self.description:
             thing['description'] = self.description
@@ -72,22 +72,22 @@ class Thing:
         return {k: v.as_property_description()
                 for k, v in self.properties.items()}
 
-    def add_property(self, _property):
+    def add_property(self, property_):
         """
         Add a property to this thing.
 
-        _property -- property to add
+        property_ -- property to add
         """
-        self.properties[_property.name] = _property
+        self.properties[property_.name] = property_
 
-    def remove_property(self, _property):
+    def remove_property(self, property_):
         """
         Remove a property from this thing.
 
-        _property -- property to remove
+        property_ -- property to remove
         """
-        if _property.name in self.properties:
-            del self.properties[_property.name]
+        if property_.name in self.properties:
+            del self.properties[property_.name]
 
     def find_property(self, property_name):
         """

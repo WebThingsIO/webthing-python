@@ -27,8 +27,7 @@ class Property:
             if field in description:
                 self.description[field] = description[field]
 
-        self.description['href'] = '/things/{}/properties/{}'.format(
-            self.thing.name, self.name)
+        self.description['href'] = '/properties/{}'.format(self.name)
 
     def as_property_description(self):
         """
