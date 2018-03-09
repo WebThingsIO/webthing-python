@@ -55,6 +55,7 @@ class Property:
         else:
             self.value = value
 
+        self.thing.property_notify(self)
         return self.value
 
     def get_value(self):

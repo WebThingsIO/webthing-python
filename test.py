@@ -1,4 +1,24 @@
-from webthing import Property, Thing, WebThingServer
+import uuid
+
+from webthing import Action, Event, Property, Thing, WebThingServer
+
+
+class RebootEvent(Event):
+
+    def __init__(self, thing):
+        Event.__init__(self,
+                       thing,
+                       'reboot',
+                       description='Going down for reboot')
+
+
+class RebootAction(Action):
+
+    def __init__(self, thing, **kwargs):
+        Action.__init__(self, uuid.uuid4().hex, thing, 'reboot', **kwargs)
+
+    def perform_action(self):
+        self.thing.add_event(RebootEvent(self.thing))
 
 
 if __name__ == '__main__':
@@ -20,6 +40,9 @@ if __name__ == '__main__':
                  'led',
                  {'type': 'boolean',
                   'description': 'A red LED'}))
+
+    thing.add_action_description('reboot', 'Reboot the device', RebootAction)
+    thing.add_event_description('reboot', 'Going down for reboot')
 
     server = WebThingServer(thing, port=8888)
     server.start()

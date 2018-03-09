@@ -1,11 +1,18 @@
 """Python Web Thing server implementation."""
 
 import json
+import tornado.concurrent
+import tornado.gen
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
 
 from .utils import get_ip
+
+
+@tornado.gen.coroutine
+def perform_action(thing, name, **kwargs):
+    thing.perform_action(name, **kwargs)
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -42,12 +49,13 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
             return
 
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps(self.thing.as_thing(ws_path=self.ws_path)))
+        self.write(json.dumps(
+            self.thing.as_thing_description(ws_path=self.ws_path)))
         self.finish()
 
     def open(self):
         """Handle a new connection."""
-        pass
+        self.thing.add_subscriber(self)
 
     def on_message(self, message):
         """
@@ -58,23 +66,31 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
         try:
             message = json.loads(message)
         except ValueError:
-            self.send_message(json.dumps({
-                'messageType': 'error',
-                'data': {
-                    'status': '400 Bad Request',
-                    'message': 'Parsing request failed',
-                },
-            }))
+            try:
+                self.write_message(json.dumps({
+                    'messageType': 'error',
+                    'data': {
+                        'status': '400 Bad Request',
+                        'message': 'Parsing request failed',
+                    },
+                }))
+            except tornado.websocket.WebSocketClosedError:
+                pass
+
             return
 
         if 'messageType' not in message or 'data' not in message:
-            self.send_message(json.dumps({
-                'messageType': 'error',
-                'data': {
-                    'status': '400 Bad Request',
-                    'message': 'Invalid message',
-                },
-            }))
+            try:
+                self.write_message(json.dumps({
+                    'messageType': 'error',
+                    'data': {
+                        'status': '400 Bad Request',
+                        'message': 'Invalid message',
+                    },
+                }))
+            except tornado.websocket.WebSocketClosedError:
+                pass
+
             return
 
         msg_type = message['messageType']
@@ -82,22 +98,31 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
             for property_name, property_value in message['data'].items():
                 self.thing.set_property(property_name, property_value)
         elif msg_type == 'requestAction':
-            pass
+            for action_name, action_params in message['data'].items():
+                tornado.ioloop.IOLoop.current().spawn_callback(
+                    perform_action,
+                    self.thing,
+                    action_name,
+                    **action_params)
         elif msg_type == 'addEventSubscription':
-            pass
+            for event_name in message['data'].keys():
+                self.thing.add_event_subscriber(event_name, self)
         else:
-            self.send_message(json.dumps({
-                'messageType': 'error',
-                'data': {
-                    'status': '400 Bad Request',
-                    'message': 'Unknown messageType: ' + msg_type,
-                    'request': message,
-                },
-            }))
+            try:
+                self.send_message(json.dumps({
+                    'messageType': 'error',
+                    'data': {
+                        'status': '400 Bad Request',
+                        'message': 'Unknown messageType: ' + msg_type,
+                        'request': message,
+                    },
+                }))
+            except tornado.websocket.WebSocketClosedError:
+                pass
 
     def on_close(self):
         """Handle a close event on the socket."""
-        pass
+        self.thing.remove_subscriber(self)
 
     def check_origin(self, origin):
         """Allow connections from all origins."""
@@ -108,7 +133,11 @@ class PropertiesHandler(BaseHandler):
     """Handle a request to /properties."""
 
     def get(self):
-        """Handle a GET request."""
+        """
+        Handle a GET request.
+
+        TODO: this is not yet defined in the spec
+        """
         pass
 
 
@@ -157,11 +186,30 @@ class ActionsHandler(BaseHandler):
 
     def get(self):
         """Handle a GET request."""
-        pass
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps([a.as_action_description()
+                               for a in self.thing.actions]))
 
     def post(self):
         """Handle a POST request."""
-        pass
+        try:
+            message = json.loads(self.request.body)
+        except ValueError:
+            self.set_status(400)
+            return
+
+        if 'name' not in message or \
+                message['name'] not in self.thing.available_actions:
+            self.set_status(400)
+            return
+
+        params = message['data'] if 'data' in message else {}
+        tornado.ioloop.IOLoop.current().spawn_callback(
+            perform_action,
+            self.thing,
+            message['name'],
+            **params)
+        self.set_status(201)
 
 
 class ActionHandler(BaseHandler):
@@ -173,11 +221,19 @@ class ActionHandler(BaseHandler):
 
         action_id -- the action ID from the URL path
         """
-        pass
+        for action in self.thing.actions:
+            if action.id == action_id:
+                self.set_header('Content-Type', 'application/json')
+                self.write(json.dumps(action.as_action_description()))
+                return
+
+        self.set_status(404)
 
     def put(self, action_id):
         """
         Handle a PUT request.
+
+        TODO: this is not yet defined in the spec
 
         action_id -- the action ID from the URL path
         """
@@ -189,7 +245,11 @@ class ActionHandler(BaseHandler):
 
         action_id -- the action ID from the URL path
         """
-        pass
+        if action_id in self.thing.actions:
+            self.thing.actions[action_id].cancel()
+            self.set_status(204)
+        else:
+            self.set_status(404)
 
 
 class EventsHandler(BaseHandler):
@@ -197,7 +257,9 @@ class EventsHandler(BaseHandler):
 
     def get(self):
         """Handle a GET request."""
-        pass
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps([e.as_event_description()
+                               for e in self.thing.events]))
 
 
 class WebThingServer:
@@ -207,11 +269,12 @@ class WebThingServer:
         """
         Initialize the WebThingServer.
 
+        thing -- the Thing managed by this server
         port -- port to listen on (defaults to 80)
         """
-        self.ip = get_ip()
-        self.port = port
         self.thing = thing
+        self.port = port
+        self.ip = get_ip()
 
         self.app = tornado.web.Application([
             (
