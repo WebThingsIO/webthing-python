@@ -4,6 +4,7 @@ import re
 import time
 import tornado.httpclient
 import tornado.websocket
+import websocket
 
 from webthing.utils import get_ip
 
@@ -119,21 +120,17 @@ def run_client():
     assert re.match(_TIME_REGEX, body[0]['time']) is not None
 
     # Set up a websocket
-    message_queue = Queue()
-    def read_message(message):
-        message_queue.put(json.loads(message))
-
-    conn = yield tornado.websocket.websocket_connect(
-        'ws://127.0.0.1:8888/', on_message_callback=read_message)
+    ws = websocket.WebSocket()
+    ws.connect('ws://127.0.0.1:8888/')
 
     # Test setting property through websocket
-    conn.write_message(json.dumps({
+    ws.send(json.dumps({
         'messageType': 'setProperty',
         'data': {
             'temperature': 30,
         }
     }))
-    message = message_queue.get()
+    message = json.loads(ws.recv())
     assert message['messageType'] == 'propertyStatus'
     assert message['data']['temperature'] == 30
 
@@ -142,24 +139,25 @@ def run_client():
     assert body['temperature'] == 30
 
     # Test requesting action through websocket
-    conn.write_message(json.dumps({
+    ws.send(json.dumps({
         'messageType': 'requestAction',
         'data': {
             'reboot': {},
         }
     }))
-    message = message_queue.get()
+    message = json.loads(ws.recv())
     assert message['messageType'] == 'actionStatus'
     assert message['data']['reboot']['href'].startswith('/actions/')
     assert message['data']['reboot']['status'] == 'created'
-    message = message_queue.get()
+    message = json.loads(ws.recv())
     assert message['messageType'] == 'actionStatus'
     assert message['data']['reboot']['href'].startswith('/actions/')
     assert message['data']['reboot']['status'] == 'pending'
-    message = message_queue.get()
+    message = json.loads(ws.recv())
     assert message['messageType'] == 'actionStatus'
     assert message['data']['reboot']['href'].startswith('/actions/')
     assert message['data']['reboot']['status'] == 'completed'
+    action_id = message['data']['reboot']['href'].split('/')[2]
 
     code, body = http_request('GET', '/actions')
     assert code == 200
@@ -178,34 +176,36 @@ def run_client():
     assert re.match(_TIME_REGEX, body[1]['time']) is not None
 
     # Test event subscription through websocket
-    conn.write_message(json.dumps({
+    ws.send(json.dumps({
         'messageType': 'addEventSubscription',
         'data': {
             'reboot': {},
         }
     }))
-    conn.write_message(json.dumps({
+    ws.send(json.dumps({
         'messageType': 'requestAction',
         'data': {
             'reboot': {},
         }
     }))
-    message = message_queue.get()
+    message = json.loads(ws.recv())
     assert message['messageType'] == 'actionStatus'
     assert message['data']['reboot']['href'].startswith('/actions/')
     assert message['data']['reboot']['status'] == 'created'
-    message = message_queue.get()
+    message = json.loads(ws.recv())
     assert message['messageType'] == 'actionStatus'
     assert message['data']['reboot']['href'].startswith('/actions/')
     assert message['data']['reboot']['status'] == 'pending'
-    message = message_queue.get()
+    message = json.loads(ws.recv())
     assert message['messageType'] == 'event'
     assert re.match(_TIME_REGEX, message['data']['reboot']['timestamp']) is not None
-    message = message_queue.get()
+    message = json.loads(ws.recv())
     assert message['messageType'] == 'actionStatus'
     assert message['data']['reboot']['href'].startswith('/actions/')
     assert message['data']['reboot']['status'] == 'completed'
 
+    ws.close()
+
 
 if __name__ == '__main__':
-    run_client()
+    exit(run_client())

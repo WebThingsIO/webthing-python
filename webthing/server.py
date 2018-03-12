@@ -3,6 +3,7 @@
 import json
 import tornado.concurrent
 import tornado.gen
+import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -39,7 +40,10 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
         port -- port the server is listening on
         """
         self.thing = thing
-        self.ws_path = 'ws://{}:{}/'.format(ip, port)
+        if self.application.is_tls:
+            self.ws_path = 'wss://{}:{}/'.format(ip, port)
+        else:
+            self.ws_path = 'ws://{}:{}/'.format(ip, port)
 
     @tornado.web.asynchronous
     def get(self, *args, **kwargs):
@@ -271,7 +275,7 @@ class EventsHandler(BaseHandler):
 class WebThingServer:
     """Server to represent a Web Thing over HTTP."""
 
-    def __init__(self, thing, port=80):
+    def __init__(self, thing, port=80, ssl_options=None):
         """
         Initialize the WebThingServer.
 
@@ -314,8 +318,11 @@ class WebThingServer:
                 dict(thing=self.thing),
             ),
         ])
+        self.app.is_tls = ssl_options is not None
+        self.server = tornado.httpserver.HTTPServer(self.app,
+                                                    ssl_options=ssl_options)
 
     def start(self):
         """Start listening for incoming connections."""
-        self.app.listen(self.port)
+        self.server.listen(self.port)
         tornado.ioloop.IOLoop.current().start()
