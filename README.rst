@@ -8,6 +8,7 @@ Example
 
 .. code:: python
 
+    import time
     import uuid
 
     from webthing import Action, Event, Property, Thing, WebThingServer
@@ -29,6 +30,7 @@ Example
 
         def perform_action(self):
             self.thing.add_event(RebootEvent(self.thing))
+            time.sleep(1)
 
 
     if __name__ == '__main__':

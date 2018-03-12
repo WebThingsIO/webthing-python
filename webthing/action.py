@@ -21,11 +21,9 @@ class Action:
         self.href = '/actions/{}'.format(self.id)
         self.status = 'created'
         self.time_requested = \
-            datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S%z')
+            datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S+00:00')
         self.time_completed = None
         self.thing.action_notify(self)
-
-        self.start()
 
     def as_action_description(self):
         """
@@ -64,5 +62,5 @@ class Action:
         """Finish performing the action."""
         self.status = 'completed'
         self.time_completed = \
-            datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S%z')
+            datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S+00:00')
         self.thing.action_notify(self)

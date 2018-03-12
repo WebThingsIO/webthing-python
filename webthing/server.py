@@ -11,8 +11,8 @@ from .utils import get_ip
 
 
 @tornado.gen.coroutine
-def perform_action(thing, name, **kwargs):
-    thing.perform_action(name, **kwargs)
+def perform_action(action):
+    action.start()
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -99,11 +99,12 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
                 self.thing.set_property(property_name, property_value)
         elif msg_type == 'requestAction':
             for action_name, action_params in message['data'].items():
+                action = self.thing.perform_action(action_name,
+                                                   **action_params)
                 tornado.ioloop.IOLoop.current().spawn_callback(
                     perform_action,
-                    self.thing,
-                    action_name,
-                    **action_params)
+                    action,
+                )
         elif msg_type == 'addEventSubscription':
             for event_name in message['data'].keys():
                 self.thing.add_event_subscriber(event_name, self)
@@ -204,12 +205,15 @@ class ActionsHandler(BaseHandler):
             return
 
         params = message['data'] if 'data' in message else {}
-        tornado.ioloop.IOLoop.current().spawn_callback(
-            perform_action,
-            self.thing,
-            message['name'],
-            **params)
+        action = self.thing.perform_action(message['name'], **params)
         self.set_status(201)
+        self.write(json.dumps({
+            'name': action.name,
+            'href': action.href,
+        }))
+
+        # Start the action
+        tornado.ioloop.IOLoop.current().spawn_callback(perform_action, action)
 
 
 class ActionHandler(BaseHandler):
@@ -245,11 +249,13 @@ class ActionHandler(BaseHandler):
 
         action_id -- the action ID from the URL path
         """
-        if action_id in self.thing.actions:
-            self.thing.actions[action_id].cancel()
-            self.set_status(204)
-        else:
-            self.set_status(404)
+        for action in self.thing.actions:
+            if action.id == action_id:
+                action.cancel()
+                self.set_status(204)
+                return
+
+        self.set_status(404)
 
 
 class EventsHandler(BaseHandler):

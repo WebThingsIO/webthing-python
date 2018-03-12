@@ -1,3 +1,4 @@
+import time
 import uuid
 
 from webthing import Action, Event, Property, Thing, WebThingServer
@@ -19,9 +20,10 @@ class RebootAction(Action):
 
     def perform_action(self):
         self.thing.add_event(RebootEvent(self.thing))
+        time.sleep(1)
 
 
-if __name__ == '__main__':
+def run_server():
     thing = Thing(name='WoT Pi', description='A WoT-connected Raspberry Pi')
 
     thing.add_property(
@@ -46,3 +48,7 @@ if __name__ == '__main__':
 
     server = WebThingServer(thing, port=8888)
     server.start()
+
+
+if __name__ == '__main__':
+    run_server()

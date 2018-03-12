@@ -181,6 +181,7 @@ class Thing:
 
         action = self.available_actions[action_name]['class'](self, **kwargs)
         self.actions.append(action)
+        return action
 
     def add_action_description(self, name, description, cls):
         """

@@ -17,7 +17,8 @@ class Event:
         self.thing = thing
         self.name = name
         self.description = description
-        self.time = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S%z')
+        self.time = \
+            datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S+00:00')
 
     def as_event_description(self):
         """
