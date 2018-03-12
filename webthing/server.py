@@ -13,6 +13,7 @@ from .utils import get_ip
 
 @tornado.gen.coroutine
 def perform_action(action):
+    """Perform an Action in a coroutine."""
     action.start()
 
 
@@ -281,6 +282,7 @@ class WebThingServer:
 
         thing -- the Thing managed by this server
         port -- port to listen on (defaults to 80)
+        ssl_options -- dict of SSL options to pass to the tornado server
         """
         self.thing = thing
         self.port = port
@@ -326,3 +328,7 @@ class WebThingServer:
         """Start listening for incoming connections."""
         self.server.listen(self.port)
         tornado.ioloop.IOLoop.current().start()
+
+    def stop(self):
+        """Stop listening."""
+        self.server.stop()

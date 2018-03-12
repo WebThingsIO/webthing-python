@@ -10,7 +10,7 @@ class Event:
         """
         Initialize the object.
 
-        thing -- the Thing this event belongs to
+        thing -- Thing this event belongs to
         name -- name of the event
         description -- description of the event
         """

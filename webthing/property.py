@@ -16,11 +16,6 @@ class Property:
         self.name = name
         self.value = None
         self.description = {}
-        self.visible = True
-        self.fire_and_forget = False
-
-        if 'visible' in description:
-            self.visible = description['visible']
 
         fields = ['type', 'unit', 'description', 'min', 'max']
         for field in fields:
@@ -36,10 +31,6 @@ class Property:
         Returns a dictionary describing the property.
         """
         return self.description
-
-    def is_visible(self):
-        """Return whether or not this property is visible."""
-        return self.visible
 
     def set_cached_value(self, value):
         """
