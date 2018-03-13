@@ -1,6 +1,8 @@
 """Python Web Thing server implementation."""
 
+from zeroconf import ServiceInfo, Zeroconf
 import json
+import socket
 import tornado.concurrent
 import tornado.gen
 import tornado.httpserver
@@ -326,9 +328,26 @@ class WebThingServer:
 
     def start(self):
         """Start listening for incoming connections."""
+        url = '{}://{}:{}/'.format('https' if self.app.is_tls else 'http',
+                                   self.ip,
+                                   self.port)
+        self.service_info = ServiceInfo(
+            '_wot._tcp.local.',
+            '{}._wot._tcp.local.'.format(self.thing.name),
+            address=socket.inet_aton(self.ip),
+            port=self.port,
+            properties={
+                'url': url,
+            },
+            server='{}.local.'.format(socket.gethostname()))
+        self.zeroconf = Zeroconf()
+        self.zeroconf.register_service(self.service_info)
+
         self.server.listen(self.port)
         tornado.ioloop.IOLoop.current().start()
 
     def stop(self):
         """Stop listening."""
+        self.zeroconf.unregister_service(self.service_info)
+        self.zeroconf.close()
         self.server.stop()

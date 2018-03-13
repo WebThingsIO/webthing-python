@@ -13,7 +13,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='webthing',
-    version='0.1.0',
+    version='0.2.0',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',
@@ -21,5 +21,5 @@ setup(
     author_email='mrstegeman@gmail.com',
     keywords='mozilla iot web thing webthing',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    install_requires=['tornado'],
+    install_requires=['tornado', 'zeroconf'],
 )

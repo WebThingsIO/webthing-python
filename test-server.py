@@ -47,7 +47,10 @@ def run_server():
     thing.add_event_description('reboot', 'Going down for reboot')
 
     server = WebThingServer(thing, port=8888)
-    server.start()
+    try:
+        server.start()
+    except KeyboardInterrupt:
+        server.stop()
 
 
 if __name__ == '__main__':
