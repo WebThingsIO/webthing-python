@@ -332,8 +332,8 @@ class WebThingServer:
                                    self.ip,
                                    self.port)
         self.service_info = ServiceInfo(
-            '_wot._tcp.local.',
-            '{}._wot._tcp.local.'.format(self.thing.name),
+            '_webthing._sub._http._tcp.local.',
+            '{}._http._tcp.local.'.format(self.thing.name),
             address=socket.inet_aton(self.ip),
             port=self.port,
             properties={
