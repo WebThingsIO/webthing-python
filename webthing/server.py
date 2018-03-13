@@ -184,7 +184,10 @@ class PropertyHandler(BaseHandler):
 
         if self.thing.has_property(property_name):
             self.thing.set_property(property_name, args[property_name])
-            self.set_status(200)
+            self.set_header('Content-Type', 'application/json')
+            self.write(json.dumps({
+                property_name: self.thing.get_property(property_name),
+            }))
         else:
             self.set_status(404)
 
