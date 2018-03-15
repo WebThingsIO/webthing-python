@@ -18,7 +18,7 @@ class Action:
         self.thing = thing
         self.name = name
         self.kwargs = kwargs
-        self.href = '/actions/{}'.format(self.id)
+        self.href = '/actions/{}/{}'.format(self.name, self.id)
         self.status = 'created'
         self.time_requested = \
             datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S+00:00')
@@ -32,14 +32,15 @@ class Action:
         Returns a dictionary describing the action.
         """
         description = {
-            'name': self.name,
-            'href': self.href,
-            'timeRequested': self.time_requested,
-            'status': self.status,
+            self.name: {
+                'href': self.href,
+                'timeRequested': self.time_requested,
+                'status': self.status,
+            },
         }
 
         if self.time_completed is not None:
-            description['timeCompleted'] = self.time_completed
+            description[self.name]['timeCompleted'] = self.time_completed
 
         return description
 

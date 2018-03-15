@@ -27,7 +27,8 @@ class Event:
         Returns a dictionary describing the event.
         """
         return {
-            'name': self.name,
-            'description': self.description,
-            'time': self.time,
+            self.name: {
+                'description': self.description,
+                'time': self.time,
+            },
         }

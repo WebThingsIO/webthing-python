@@ -197,9 +197,13 @@ class ActionsHandler(BaseHandler):
 
     def get(self):
         """Handle a GET request."""
+        response = []
+        for name in self.thing.actions:
+            for action in self.thing.actions[name]:
+                response.append(action.as_action_description())
+
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps([a.as_action_description()
-                               for a in self.thing.actions]))
+        self.write(json.dumps(response))
 
     def post(self):
         """Handle a POST request."""
@@ -209,33 +213,41 @@ class ActionsHandler(BaseHandler):
             self.set_status(400)
             return
 
-        if 'name' not in message or \
-                message['name'] not in self.thing.available_actions:
-            self.set_status(400)
-            return
+        response = {}
+        for action_name, action_params in message.items():
+            action = self.thing.perform_action(action_name,
+                                               **action_params)
 
-        params = message['data'] if 'data' in message else {}
-        action = self.thing.perform_action(message['name'], **params)
+            response[action_name] = {
+                'href': action.href,
+                'status': action.status,
+            }
+
+            # Start the action
+            tornado.ioloop.IOLoop.current().spawn_callback(
+                perform_action,
+                action,
+            )
+
         self.set_status(201)
-        self.write(json.dumps({
-            'name': action.name,
-            'href': action.href,
-        }))
-
-        # Start the action
-        tornado.ioloop.IOLoop.current().spawn_callback(perform_action, action)
+        self.write(json.dumps(response))
 
 
 class ActionHandler(BaseHandler):
     """Handle a request to /actions/<action>."""
 
-    def get(self, action_id):
+    def get(self, action_name, action_id):
         """
         Handle a GET request.
 
+        action_name -- name of the action from the URL path
         action_id -- the action ID from the URL path
         """
-        for action in self.thing.actions:
+        if action_name not in self.thing.actions:
+            self.set_status(404)
+            return
+
+        for action in self.thing.actions[action_name]:
             if action.id == action_id:
                 self.set_header('Content-Type', 'application/json')
                 self.write(json.dumps(action.as_action_description()))
@@ -243,23 +255,29 @@ class ActionHandler(BaseHandler):
 
         self.set_status(404)
 
-    def put(self, action_id):
+    def put(self, action_name, action_id):
         """
         Handle a PUT request.
 
         TODO: this is not yet defined in the spec
 
+        action_name -- name of the action from the URL path
         action_id -- the action ID from the URL path
         """
         pass
 
-    def delete(self, action_id):
+    def delete(self, action_name, action_id):
         """
         Handle a DELETE request.
 
+        action_name -- name of the action from the URL path
         action_id -- the action ID from the URL path
         """
-        for action in self.thing.actions:
+        if action_name not in self.thing.actions:
+            self.set_status(404)
+            return
+
+        for action in self.thing.actions[action_name]:
             if action.id == action_id:
                 action.cancel()
                 self.set_status(204)
@@ -315,7 +333,7 @@ class WebThingServer:
                 dict(thing=self.thing),
             ),
             (
-                r'/actions/([^/]+)/?',
+                r'/actions/([^/]+)/([^/]+)/?',
                 ActionHandler,
                 dict(thing=self.thing),
             ),
