@@ -21,13 +21,16 @@ class Thing:
         self.properties = {}
         self.available_actions = {}
         self.available_events = {}
-        self.actions = []
+        self.actions = {}
         self.events = []
         self.subscribers = set()
 
-    def as_thing_description(self, ws_path=None):
+    def as_thing_description(self, ws_path=None, ui_path=None):
         """
         Return the thing state as a Thing Description.
+
+        ws_path -- the websocket URL
+        ui_path -- href of a custom thing UI
 
         Returns the state as a dictionary.
         """
@@ -44,15 +47,34 @@ class Thing:
                 name: {'description': event['description']}
                 for name, event in self.available_events.items()
             },
-            'links': {
-                'properties': '/properties',
-                'actions': '/actions',
-                'events': '/events',
-            },
+            'links': [
+                {
+                    'rel': 'properties',
+                    'href': '/properties',
+                },
+                {
+                    'rel': 'actions',
+                    'href': '/actions',
+                },
+                {
+                    'rel': 'events',
+                    'href': '/events',
+                },
+            ],
         }
 
         if ws_path is not None:
-            thing['links']['websocket'] = ws_path
+            thing['links'].append({
+                'rel': 'alternate',
+                'href': ws_path,
+            })
+
+        if ui_path is not None:
+            thing['links'].append({
+                'rel': 'alternate',
+                'mediaType': 'text/html',
+                'href': ui_path,
+            })
 
         if self.description:
             thing['description'] = self.description
@@ -180,7 +202,7 @@ class Thing:
             return
 
         action = self.available_actions[action_name]['class'](self, **kwargs)
-        self.actions.append(action)
+        self.actions[action_name].append(action)
         return action
 
     def add_action_description(self, name, description, cls):
@@ -195,6 +217,7 @@ class Thing:
             'description': description,
             'class': cls,
         }
+        self.actions[name] = []
 
     def add_subscriber(self, ws):
         """
@@ -264,12 +287,7 @@ class Thing:
             try:
                 subscriber.write_message(json.dumps({
                     'messageType': 'actionStatus',
-                    'data': {
-                        action.name: {
-                            'href': action.href,
-                            'status': action.status,
-                        },
-                    },
+                    'data': action.as_action_description(),
                 }))
             except tornado.websocket.WebSocketClosedError:
                 pass
