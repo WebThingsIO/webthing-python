@@ -28,7 +28,6 @@ class Event:
         """
         return {
             self.name: {
-                'description': self.description,
-                'time': self.time,
+                'timestamp': self.time,
             },
         }

@@ -121,8 +121,7 @@ def run_client():
     assert code == 200
     assert len(body) == 1
     assert len(body[0].keys()) == 1
-    assert body[0]['reboot']['description'] == 'Going down for reboot'
-    assert re.match(_TIME_REGEX, body[0]['reboot']['time']) is not None
+    assert re.match(_TIME_REGEX, body[0]['reboot']['timestamp']) is not None
 
     # Set up a websocket
     ws = websocket.WebSocket()
@@ -185,8 +184,7 @@ def run_client():
     assert code == 200
     assert len(body) == 2
     assert len(body[1].keys()) == 1
-    assert body[1]['reboot']['description'] == 'Going down for reboot'
-    assert re.match(_TIME_REGEX, body[1]['reboot']['time']) is not None
+    assert re.match(_TIME_REGEX, body[1]['reboot']['timestamp']) is not None
 
     # Test event subscription through websocket
     ws.send(json.dumps({
