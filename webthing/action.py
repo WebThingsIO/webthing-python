@@ -53,11 +53,15 @@ class Action:
 
     def get_href(self):
         """Get this action's href."""
-        return this.href
+        return self.href
 
     def get_status(self):
         """Get this action's status."""
-        return this.status
+        return self.status
+
+    def get_thing(self):
+        """Get the thing associated with this action."""
+        return self.thing
 
     def start(self):
         """Start performing the action."""
