@@ -97,6 +97,14 @@ class Thing:
         """
         return self.type
 
+    def get_description(self):
+        """
+        Get the description of the thing.
+
+        Returns the description as a string.
+        """
+        return self.description
+
     def get_property_descriptions(self):
         """
         Get the thing's properties as a dictionary.
@@ -105,6 +113,27 @@ class Thing:
         """
         return {k: v.as_property_description()
                 for k, v in self.properties.items()}
+
+    def get_action_descriptions(self):
+        """
+        Get the thing's actions as an array.
+
+        Returns the action descriptions.
+        """
+        descriptions = []
+        for name in self.actions:
+            for action in self.actions[name]:
+                descriptions.append(action.as_action_description())
+
+        return descriptions
+
+    def get_event_descriptions(self):
+        """
+        Get the thing's events as an array.
+
+        Returns the event descriptions.
+        """
+        return [e.as_event_description() for e in self.events]
 
     def add_property(self, property_):
         """
@@ -170,6 +199,24 @@ class Thing:
             return
 
         prop.set_value(value)
+
+    def get_action(self, action_name, action_id):
+        """
+        Get an action.
+
+        action_name -- name of the action
+        action_id -- ID of the action
+
+        Returns the requested action if found, else None.
+        """
+        if action_name not in self.actions:
+            return None
+
+        for action in self.actions[action_name]:
+            if action.id == action_id:
+                return action
+
+        return None
 
     def add_event(self, event):
         """

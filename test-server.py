@@ -1,4 +1,3 @@
-import time
 import uuid
 
 from webthing import Action, Event, Property, Thing, WebThingServer
@@ -20,7 +19,6 @@ class RebootAction(Action):
 
     def perform_action(self):
         self.thing.add_event(RebootEvent(self.thing))
-        time.sleep(1)
 
 
 def run_server():

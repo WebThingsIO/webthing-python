@@ -1,6 +1,6 @@
 """High-level Action base class implementation."""
 
-import datetime
+from .utils import timestamp
 
 
 class Action:
@@ -20,8 +20,7 @@ class Action:
         self.kwargs = kwargs
         self.href = '/actions/{}/{}'.format(self.name, self.id)
         self.status = 'created'
-        self.time_requested = \
-            datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S+00:00')
+        self.time_requested = timestamp()
         self.time_completed = None
         self.thing.action_notify(self)
 
@@ -44,6 +43,22 @@ class Action:
 
         return description
 
+    def get_id(self):
+        """Get this action's ID."""
+        return self.id
+
+    def get_name(self):
+        """Get this action's name."""
+        return self.name
+
+    def get_href(self):
+        """Get this action's href."""
+        return this.href
+
+    def get_status(self):
+        """Get this action's status."""
+        return this.status
+
     def start(self):
         """Start performing the action."""
         self.status = 'pending'
@@ -62,6 +77,5 @@ class Action:
     def finish(self):
         """Finish performing the action."""
         self.status = 'completed'
-        self.time_completed = \
-            datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S+00:00')
+        self.time_completed = timestamp()
         self.thing.action_notify(self)

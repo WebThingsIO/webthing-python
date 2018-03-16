@@ -197,13 +197,8 @@ class ActionsHandler(BaseHandler):
 
     def get(self):
         """Handle a GET request."""
-        response = []
-        for name in self.thing.actions:
-            for action in self.thing.actions[name]:
-                response.append(action.as_action_description())
-
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps(response))
+        self.write(json.dumps(self.thing.get_action_descriptions()))
 
     def post(self):
         """Handle a POST request."""
@@ -234,7 +229,7 @@ class ActionsHandler(BaseHandler):
 
 
 class ActionHandler(BaseHandler):
-    """Handle a request to /actions/<action>."""
+    """Handle a request to /actions/<action_name>/<action_id>."""
 
     def get(self, action_name, action_id):
         """
@@ -243,17 +238,13 @@ class ActionHandler(BaseHandler):
         action_name -- name of the action from the URL path
         action_id -- the action ID from the URL path
         """
-        if action_name not in self.thing.actions:
+        action = self.thing.get_action(action_name, action_id)
+        if action is None:
             self.set_status(404)
             return
 
-        for action in self.thing.actions[action_name]:
-            if action.id == action_id:
-                self.set_header('Content-Type', 'application/json')
-                self.write(json.dumps(action.as_action_description()))
-                return
-
-        self.set_status(404)
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(action.as_action_description()))
 
     def put(self, action_name, action_id):
         """
@@ -273,17 +264,13 @@ class ActionHandler(BaseHandler):
         action_name -- name of the action from the URL path
         action_id -- the action ID from the URL path
         """
-        if action_name not in self.thing.actions:
+        action = self.thing.get_action(action_name, action_id)
+        if action is None:
             self.set_status(404)
             return
 
-        for action in self.thing.actions[action_name]:
-            if action.id == action_id:
-                action.cancel()
-                self.set_status(204)
-                return
-
-        self.set_status(404)
+        action.cancel()
+        self.set_status(204)
 
 
 class EventsHandler(BaseHandler):
@@ -292,8 +279,7 @@ class EventsHandler(BaseHandler):
     def get(self):
         """Handle a GET request."""
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps([e.as_event_description()
-                               for e in self.thing.events]))
+        self.write(json.dumps(self.thing.get_event_descriptions()))
 
 
 class WebThingServer:
