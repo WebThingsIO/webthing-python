@@ -1,6 +1,6 @@
 """High-level Event base class implementation."""
 
-import datetime
+from .utils import timestamp
 
 
 class Event:
@@ -17,8 +17,7 @@ class Event:
         self.thing = thing
         self.name = name
         self.description = description
-        self.time = \
-            datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S+00:00')
+        self.time = timestamp()
 
     def as_event_description(self):
         """

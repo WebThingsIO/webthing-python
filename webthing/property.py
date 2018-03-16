@@ -64,3 +64,11 @@ class Property:
         value -- the value to set
         """
         self.set_cached_value(value)
+
+    def get_name(self):
+        """
+        Get the name of this property.
+
+        Returns the name.
+        """
+        return self.name
