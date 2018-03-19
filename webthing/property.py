@@ -72,3 +72,7 @@ class Property:
         Returns the name.
         """
         return self.name
+
+    def get_thing(self):
+        """Get the thing associated with this property."""
+        return self.thing

@@ -63,6 +63,14 @@ class Action:
         """Get the thing associated with this action."""
         return self.thing
 
+    def get_time_requested(self):
+        """Get the time the action was requested."""
+        return self.time_requested
+
+    def get_time_completed(self):
+        """Get the time the action was completed."""
+        return self.time_completed
+
     def start(self):
         """Start performing the action."""
         self.status = 'pending'

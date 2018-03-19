@@ -30,3 +30,19 @@ class Event:
                 'timestamp': self.time,
             },
         }
+
+    def get_thing(self):
+        """Get the thing associated with this event."""
+        return self.thing
+
+    def get_name(self):
+        """Get the event's name."""
+        return self.name
+
+    def get_description(self):
+        """Get the event's description."""
+        return self.description
+
+    def get_time(self):
+        """Get the event's timestamp."""
+        return self.time
