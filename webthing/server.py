@@ -50,7 +50,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
 
     @tornado.web.asynchronous
     def get(self, *args, **kwargs):
-        """Handle a GET request."""
+        """Handle a GET request, including websocket requests."""
         if self.request.headers.get('Upgrade', '').lower() == 'websocket':
             tornado.websocket.WebSocketHandler.get(self, *args, **kwargs)
             return

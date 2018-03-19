@@ -244,6 +244,8 @@ class Thing:
         Perform an action on the thing.
 
         action_name -- name of the action
+
+        Returns the action that was created.
         """
         if action_name not in self.available_actions:
             return
