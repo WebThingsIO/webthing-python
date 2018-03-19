@@ -3,6 +3,7 @@
 *.py[cod]
 *.swp
 *~
+/build/
+/dist/
+/requirements.txt
 __pycache__/
-build/
-dist/
