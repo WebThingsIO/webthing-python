@@ -7,7 +7,7 @@ import tornado.websocket
 class Thing:
     """A Web Thing."""
 
-    def __init__(self, name='', type_='thing', description=''):
+    def __init__(self, name, type_='thing', description=''):
         """
         Initialize the object.
 
@@ -40,11 +40,11 @@ class Thing:
             'type': self.type,
             'properties': self.get_property_descriptions(),
             'actions': {
-                name: {'description': action['description']}
+                name: action['metadata']
                 for name, action in self.available_actions.items()
             },
             'events': {
-                name: {'description': event['description']}
+                name: event['metadata']
                 for name, event in self.available_events.items()
             },
             'links': [
@@ -227,43 +227,55 @@ class Thing:
         self.events.append(event)
         self.event_notify(event)
 
-    def add_event_description(self, name, description):
+    def add_available_event(self, name, metadata):
         """
-        Add an event description.
+        Add an available event.
 
         name -- name of the event
-        description -- event description
+        metadata -- event metadata, i.e. type, description, etc., as a dict
         """
+        if metadata is None:
+            metadata = {}
+
+        metadata['href'] = '/events/{}'.format(name)
+
         self.available_events[name] = {
-            'description': description,
+            'metadata': metadata,
             'subscribers': set(),
         }
 
-    def perform_action(self, action_name, **kwargs):
+    def perform_action(self, action_name, input_=None):
         """
         Perform an action on the thing.
 
         action_name -- name of the action
+        input_ -- any action inputs
 
         Returns the action that was created.
         """
         if action_name not in self.available_actions:
             return
 
-        action = self.available_actions[action_name]['class'](self, **kwargs)
+        action = self.available_actions[action_name]['class'](self,
+                                                              input_=input_)
         self.actions[action_name].append(action)
         return action
 
-    def add_action_description(self, name, description, cls):
+    def add_available_action(self, name, metadata, cls):
         """
-        Add an action description.
+        Add an available action.
 
         name -- name of the action
-        description -- description of the action
+        metadata -- action metadata, i.e. type, description, etc., as a dict
         cls -- class to instantiate for this action
         """
+        if metadata is None:
+            metadata = {}
+
+        metadata['href'] = '/actions/{}'.format(name)
+
         self.available_actions[name] = {
-            'description': description,
+            'metadata': metadata,
             'class': cls,
         }
         self.actions[name] = []
@@ -354,11 +366,7 @@ class Thing:
             try:
                 subscriber.write_message(json.dumps({
                     'messageType': 'event',
-                    'data': {
-                        event.name: {
-                            'timestamp': event.time,
-                        },
-                    },
+                    'data': event.as_event_description(),
                 }))
             except tornado.websocket.WebSocketClosedError:
                 pass

@@ -1,48 +1,72 @@
+import time
 import uuid
 
 from webthing import Action, Event, Property, Thing, WebThingServer
 
 
-class RebootEvent(Event):
+class OverheatedEvent(Event):
 
-    def __init__(self, thing):
-        Event.__init__(self,
-                       thing,
-                       'reboot',
-                       description='Going down for reboot')
+    def __init__(self, thing, data):
+        Event.__init__(self, thing, 'overheated', data=data)
 
 
-class RebootAction(Action):
+class FadeAction(Action):
 
-    def __init__(self, thing, **kwargs):
-        Action.__init__(self, uuid.uuid4().hex, thing, 'reboot', **kwargs)
+    def __init__(self, thing, input_):
+        Action.__init__(self, uuid.uuid4().hex, thing, 'fade', input_=input_)
 
     def perform_action(self):
-        self.thing.add_event(RebootEvent(self.thing))
+        time.sleep(self.input['duration'] / 1000)
+        self.thing.set_property('level', self.input['level'])
+        self.thing.add_event(OverheatedEvent(self.thing, 102))
 
 
 def run_server():
-    thing = Thing(name='WoT Pi', description='A WoT-connected Raspberry Pi')
+    thing = Thing(name='My Lamp', description='A web connected lamp')
 
     thing.add_property(
         Property(thing,
-                 'temperature',
-                 {'type': 'number',
-                  'unit': 'celsius',
-                  'description': 'An ambient temperature sensor'}))
+                 'on',
+                 metadata={
+                     'type': 'boolean',
+                     'description': 'Whether the lamp is turned on',
+                 },
+                 value=True))
     thing.add_property(
         Property(thing,
-                 'humidity',
-                 {'type': 'number',
-                  'unit': 'percent'}))
-    thing.add_property(
-        Property(thing,
-                 'led',
-                 {'type': 'boolean',
-                  'description': 'A red LED'}))
+                 'level',
+                 metadata={
+                     'type': 'number',
+                     'description': 'The level of light from 0-100',
+                     'minimum': 0,
+                     'maximum': 100,
+                 },
+                 value=50))
 
-    thing.add_action_description('reboot', 'Reboot the device', RebootAction)
-    thing.add_event_description('reboot', 'Going down for reboot')
+    thing.add_available_action(
+        'fade',
+        {'description': 'Fade the lamp to a given level',
+         'input': {
+             'type': 'object',
+             'properties': {
+                 'level': {
+                     'type': 'number',
+                     'minimum': 0,
+                     'maximum': 100,
+                 },
+                 'duration': {
+                     'type': 'number',
+                     'unit': 'milliseconds',
+                 },
+             },
+         }},
+        FadeAction)
+
+    thing.add_available_event(
+        'overheated',
+        {'description': 'The lamp has exceeded its safe operating temperature',
+         'type': 'number',
+         'unit': 'celcius'})
 
     server = WebThingServer(thing, port=8888)
     try:

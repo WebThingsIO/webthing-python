@@ -4,25 +4,21 @@
 class Property:
     """A Property represents an individual state value of a thing."""
 
-    def __init__(self, thing, name, description):
+    def __init__(self, thing, name, metadata=None, value=None):
         """
         Initialize the object.
 
         thing -- the Thing this property belongs to
         name -- name of the property
-        description -- description of the property, as a dictionary
+        metadata -- property metadata, i.e. type, description, unit, etc.,
+                    as a dict
+        value -- initial value of property
         """
         self.thing = thing
         self.name = name
-        self.value = None
-        self.description = {}
-
-        fields = ['type', 'unit', 'description', 'min', 'max']
-        for field in fields:
-            if field in description:
-                self.description[field] = description[field]
-
-        self.description['href'] = '/properties/{}'.format(self.name)
+        self.value = value
+        self.metadata = metadata if metadata is not None else {}
+        self.metadata['href'] = '/properties/{}'.format(self.name)
 
     def as_property_description(self):
         """
@@ -30,7 +26,7 @@ class Property:
 
         Returns a dictionary describing the property.
         """
-        return self.description
+        return self.metadata
 
     def set_cached_value(self, value):
         """
@@ -40,8 +36,8 @@ class Property:
 
         Returns the value that was set.
         """
-        if 'type' in self.description and \
-                self.description['type'] == 'boolean':
+        if 'type' in self.metadata and \
+                self.metadata['type'] == 'boolean':
             self.value = bool(value)
         else:
             self.value = value

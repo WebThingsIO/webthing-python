@@ -6,18 +6,19 @@ from .utils import timestamp
 class Action:
     """An Action represents an individual action on a thing."""
 
-    def __init__(self, id_, thing, name, **kwargs):
+    def __init__(self, id_, thing, name, input_):
         """
         Initialize the object.
 
         id_ ID of this action
         thing -- the Thing this action belongs to
         name -- name of the action
+        input_ -- any action inputs
         """
         self.id = id_
         self.thing = thing
         self.name = name
-        self.kwargs = kwargs
+        self.input = input_
         self.href = '/actions/{}/{}'.format(self.name, self.id)
         self.status = 'created'
         self.time_requested = timestamp()
@@ -37,6 +38,9 @@ class Action:
                 'status': self.status,
             },
         }
+
+        if self.input is not None:
+            description[self.name]['input'] = self.input
 
         if self.time_completed is not None:
             description[self.name]['timeCompleted'] = self.time_completed
@@ -70,6 +74,10 @@ class Action:
     def get_time_completed(self):
         """Get the time the action was completed."""
         return self.time_completed
+
+    def get_input(self):
+        """Get the inputs for this action."""
+        return self.input
 
     def start(self):
         """Start performing the action."""

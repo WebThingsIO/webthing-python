@@ -106,8 +106,11 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
                 self.thing.set_property(property_name, property_value)
         elif msg_type == 'requestAction':
             for action_name, action_params in message['data'].items():
-                action = self.thing.perform_action(action_name,
-                                                   **action_params)
+                input_ = None
+                if 'input' in action_params:
+                    input_ = action_params['input']
+
+                action = self.thing.perform_action(action_name, input_)
                 tornado.ioloop.IOLoop.current().spawn_callback(
                     perform_action,
                     action,
@@ -210,13 +213,12 @@ class ActionsHandler(BaseHandler):
 
         response = {}
         for action_name, action_params in message.items():
-            action = self.thing.perform_action(action_name,
-                                               **action_params)
+            input_ = None
+            if 'input' in action_params:
+                input_ = action_params['input']
 
-            response[action_name] = {
-                'href': action.href,
-                'status': action.status,
-            }
+            action = self.thing.perform_action(action_name, input_)
+            response.update(action.as_action_description())
 
             # Start the action
             tornado.ioloop.IOLoop.current().spawn_callback(
@@ -229,6 +231,20 @@ class ActionsHandler(BaseHandler):
 
 
 class ActionHandler(BaseHandler):
+    """Handle a request to /actions/<action_name>."""
+
+    def get(self, action_name):
+        """
+        Handle a GET request.
+
+        TODO: this is not yet defined in the spec
+
+        action_name -- name of the action from the URL path
+        """
+        pass
+
+
+class ActionIDHandler(BaseHandler):
     """Handle a request to /actions/<action_name>/<action_id>."""
 
     def get(self, action_name, action_id):
@@ -282,6 +298,20 @@ class EventsHandler(BaseHandler):
         self.write(json.dumps(self.thing.get_event_descriptions()))
 
 
+class EventHandler(BaseHandler):
+    """Handle a request to /events/<event_name>."""
+
+    def get(self, event_name):
+        """
+        Handle a GET request.
+
+        TODO: this is not yet defined in the spec
+
+        event_name -- name of the event from the URL path
+        """
+        pass
+
+
 class WebThingServer:
     """Server to represent a Web Thing over HTTP."""
 
@@ -319,13 +349,23 @@ class WebThingServer:
                 dict(thing=self.thing),
             ),
             (
-                r'/actions/([^/]+)/([^/]+)/?',
+                r'/actions/([^/]+)/?',
                 ActionHandler,
+                dict(thing=self.thing),
+            ),
+            (
+                r'/actions/([^/]+)/([^/]+)/?',
+                ActionIDHandler,
                 dict(thing=self.thing),
             ),
             (
                 r'/events/?',
                 EventsHandler,
+                dict(thing=self.thing),
+            ),
+            (
+                r'/events/([^/]+)/?',
+                EventHandler,
                 dict(thing=self.thing),
             ),
         ])
