@@ -3,6 +3,15 @@ webthing
 
 Implementation of an HTTP `Web Thing <https://iot.mozilla.org/wot/>`_. This library is compatible with Python 2.7 and Python 3.4+. If using Python 2.7, you must use `zeroconf==0.19.1`.
 
+Installation
+============
+
+`webthing` can be installed via `pip`, as such:
+
+.. code:: shell
+
+    $ pip install webthing
+
 Example
 =======
 
