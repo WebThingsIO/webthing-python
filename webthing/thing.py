@@ -24,19 +24,56 @@ class Thing:
         self.actions = {}
         self.events = []
         self.subscribers = set()
+        self.href_prefix = ''
+        self.ws_href = None
+        self.ui_href = None
 
-    def as_thing_description(self, ws_path=None, ui_path=None):
+    def set_href_prefix(self, prefix):
+        """
+        Set the prefix of any hrefs associated with this thing.
+
+        prefix -- the prefix
+        """
+        self.href_prefix = prefix
+
+        for action in self.available_actions.values():
+            action['metadata']['href'] = prefix + action['metadata']['href']
+
+        for event in self.available_events.values():
+            event['metadata']['href'] = prefix + event['metadata']['href']
+
+        for property_ in self.properties.values():
+            property_.set_href_prefix(prefix)
+
+        for action_name in self.actions.keys():
+            for action in self.actions[action_name]:
+                action.set_href_prefix(prefix)
+
+    def set_ws_href(self, href):
+        """
+        Set the href of this thing's websocket.
+
+        href -- the href
+        """
+        self.ws_href = href
+
+    def set_ui_href(self, href):
+        """
+        Set the href of this thing's custom UI.
+
+        href -- the href
+        """
+        self.ui_href = href
+
+    def as_thing_description(self):
         """
         Return the thing state as a Thing Description.
-
-        ws_path -- the websocket URL
-        ui_path -- href of a custom thing UI
 
         Returns the state as a dictionary.
         """
         thing = {
             'name': self.name,
-            'href': '/',
+            'href': self.href_prefix if self.href_prefix else '/',
             'type': self.type,
             'properties': self.get_property_descriptions(),
             'actions': {
@@ -50,30 +87,30 @@ class Thing:
             'links': [
                 {
                     'rel': 'properties',
-                    'href': '/properties',
+                    'href': '{}/properties'.format(self.href_prefix),
                 },
                 {
                     'rel': 'actions',
-                    'href': '/actions',
+                    'href': '{}/actions'.format(self.href_prefix),
                 },
                 {
                     'rel': 'events',
-                    'href': '/events',
+                    'href': '{}/events'.format(self.href_prefix),
                 },
             ],
         }
 
-        if ws_path is not None:
+        if self.ws_href is not None:
             thing['links'].append({
                 'rel': 'alternate',
-                'href': ws_path,
+                'href': self.ws_href,
             })
 
-        if ui_path is not None:
+        if self.ui_href is not None:
             thing['links'].append({
                 'rel': 'alternate',
                 'mediaType': 'text/html',
-                'href': ui_path,
+                'href': self.ui_href,
             })
 
         if self.description:
@@ -141,6 +178,7 @@ class Thing:
 
         property_ -- property to add
         """
+        property_.set_href_prefix(self.href_prefix)
         self.properties[property_.name] = property_
 
     def remove_property(self, property_):
@@ -258,6 +296,8 @@ class Thing:
 
         action = self.available_actions[action_name]['class'](self,
                                                               input_=input_)
+        action.set_href_prefix(self.href_prefix)
+        self.action_notify(action)
         self.actions[action_name].append(action)
         return action
 

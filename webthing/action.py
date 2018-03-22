@@ -19,11 +19,19 @@ class Action:
         self.thing = thing
         self.name = name
         self.input = input_
+        self.href_prefix = ''
         self.href = '/actions/{}/{}'.format(self.name, self.id)
         self.status = 'created'
         self.time_requested = timestamp()
         self.time_completed = None
-        self.thing.action_notify(self)
+
+    def set_href_prefix(self, prefix):
+        """
+        Set the prefix of any hrefs associated with this action.
+
+        prefix -- the prefix
+        """
+        self.href_prefix = prefix
 
     def as_action_description(self):
         """
@@ -33,7 +41,7 @@ class Action:
         """
         description = {
             self.name: {
-                'href': self.href,
+                'href': self.href_prefix + self.href,
                 'timeRequested': self.time_requested,
                 'status': self.status,
             },
@@ -57,7 +65,7 @@ class Action:
 
     def get_href(self):
         """Get this action's href."""
-        return self.href
+        return self.href_prefix + self.href
 
     def get_status(self):
         """Get this action's status."""

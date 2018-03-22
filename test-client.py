@@ -10,10 +10,13 @@ from webthing.utils import get_ip
 
 
 _TIME_REGEX = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$'
+_PROTO = 'http'
+_BASE_URL = '{}:8888'.format(get_ip())
+_PATH_PREFIX = ''
 
 
 def http_request(method, path, data=None):
-    url = 'http://127.0.0.1:8888' + path
+    url = _PROTO + '://' + _BASE_URL + _PATH_PREFIX + path
 
     client = tornado.httpclient.HTTPClient()
 
@@ -53,12 +56,12 @@ def run_client():
     assert body['description'] == 'A web connected lamp'
     assert body['properties']['on']['type'] == 'boolean'
     assert body['properties']['on']['description'] == 'Whether the lamp is turned on'
-    assert body['properties']['on']['href'] == '/properties/on'
+    assert body['properties']['on']['href'] == _PATH_PREFIX + '/properties/on'
     assert body['properties']['level']['type'] == 'number'
     assert body['properties']['level']['description'] == 'The level of light from 0-100'
     assert body['properties']['level']['minimum'] == 0
     assert body['properties']['level']['maximum'] == 100
-    assert body['properties']['level']['href'] == '/properties/level'
+    assert body['properties']['level']['href'] == _PATH_PREFIX + '/properties/level'
     assert body['actions']['fade']['description'] == 'Fade the lamp to a given level'
     assert body['actions']['fade']['input']['type'] == 'object'
     assert body['actions']['fade']['input']['properties']['level']['type'] == 'number'
@@ -66,20 +69,22 @@ def run_client():
     assert body['actions']['fade']['input']['properties']['level']['maximum'] == 100
     assert body['actions']['fade']['input']['properties']['duration']['type'] == 'number'
     assert body['actions']['fade']['input']['properties']['duration']['unit'] == 'milliseconds'
-    assert body['actions']['fade']['href'] == '/actions/fade'
+    assert body['actions']['fade']['href'] == _PATH_PREFIX + '/actions/fade'
     assert body['events']['overheated']['type'] == 'number'
     assert body['events']['overheated']['unit'] == 'celcius'
     assert body['events']['overheated']['description'] == 'The lamp has exceeded its safe operating temperature'
-    assert body['events']['overheated']['href'] == '/events/overheated'
+    assert body['events']['overheated']['href'] == _PATH_PREFIX + '/events/overheated'
     assert len(body['links']) == 4
     assert body['links'][0]['rel'] == 'properties'
-    assert body['links'][0]['href'] == '/properties'
+    assert body['links'][0]['href'] == _PATH_PREFIX + '/properties'
     assert body['links'][1]['rel'] == 'actions'
-    assert body['links'][1]['href'] == '/actions'
+    assert body['links'][1]['href'] == _PATH_PREFIX + '/actions'
     assert body['links'][2]['rel'] == 'events'
-    assert body['links'][2]['href'] == '/events'
+    assert body['links'][2]['href'] == _PATH_PREFIX + '/events'
     assert body['links'][3]['rel'] == 'alternate'
-    assert body['links'][3]['href'] == 'ws://{}:8888/'.format(get_ip())
+    assert body['links'][3]['href'] == '{}://{}{}'.format(
+        'wss' if _PROTO == 'https' else 'ws', _BASE_URL, _PATH_PREFIX)
+    ws_href = body['links'][3]['href']
 
     # Test properties
     code, body = http_request('GET', '/properties/level')
@@ -118,7 +123,7 @@ def run_client():
     assert code == 201
     assert body['fade']['input']['level'] == 50
     assert body['fade']['input']['duration'] == 2000
-    assert body['fade']['href'].startswith('/actions/fade/')
+    assert body['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
     assert body['fade']['status'] == 'created'
     action_id = body['fade']['href'].split('/')[-1]
     time.sleep(2.5)
@@ -129,7 +134,7 @@ def run_client():
     assert len(body[0].keys()) == 1
     assert body[0]['fade']['input']['level'] == 50
     assert body[0]['fade']['input']['duration'] == 2000
-    assert body[0]['fade']['href'] == '/actions/fade/' + action_id
+    assert body[0]['fade']['href'] == _PATH_PREFIX + '/actions/fade/' + action_id
     assert re.match(_TIME_REGEX, body[0]['fade']['timeRequested']) is not None
     assert re.match(_TIME_REGEX, body[0]['fade']['timeCompleted']) is not None
     assert body[0]['fade']['status'] == 'completed'
@@ -148,7 +153,7 @@ def run_client():
 
     # Set up a websocket
     ws = websocket.WebSocket()
-    ws.connect('ws://127.0.0.1:8888/')
+    ws.connect(ws_href)
 
     # Test setting property through websocket
     ws.send(json.dumps({
@@ -181,13 +186,13 @@ def run_client():
     assert message['messageType'] == 'actionStatus'
     assert message['data']['fade']['input']['level'] == 90
     assert message['data']['fade']['input']['duration'] == 1000
-    assert message['data']['fade']['href'].startswith('/actions/fade/')
+    assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
     assert message['data']['fade']['status'] == 'created'
     message = json.loads(ws.recv())
     assert message['messageType'] == 'actionStatus'
     assert message['data']['fade']['input']['level'] == 90
     assert message['data']['fade']['input']['duration'] == 1000
-    assert message['data']['fade']['href'].startswith('/actions/fade/')
+    assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
     assert message['data']['fade']['status'] == 'pending'
     message = json.loads(ws.recv())
     assert message['messageType'] == 'propertyStatus'
@@ -196,7 +201,7 @@ def run_client():
     assert message['messageType'] == 'actionStatus'
     assert message['data']['fade']['input']['level'] == 90
     assert message['data']['fade']['input']['duration'] == 1000
-    assert message['data']['fade']['href'].startswith('/actions/fade/')
+    assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
     assert message['data']['fade']['status'] == 'completed'
     action_id = message['data']['fade']['href'].split('/')[-1]
 
@@ -206,7 +211,7 @@ def run_client():
     assert len(body[1].keys()) == 1
     assert body[1]['fade']['input']['level'] == 90
     assert body[1]['fade']['input']['duration'] == 1000
-    assert body[1]['fade']['href'] == '/actions/fade/' + action_id
+    assert body[1]['fade']['href'] == _PATH_PREFIX + '/actions/fade/' + action_id
     assert re.match(_TIME_REGEX, body[1]['fade']['timeRequested']) is not None
     assert re.match(_TIME_REGEX, body[1]['fade']['timeCompleted']) is not None
     assert body[1]['fade']['status'] == 'completed'
@@ -214,7 +219,7 @@ def run_client():
     code, body = http_request('GET', '/actions/fade/' + action_id)
     assert code == 200
     assert len(body.keys()) == 1
-    assert body['fade']['href'] == '/actions/fade/' + action_id
+    assert body['fade']['href'] == _PATH_PREFIX + '/actions/fade/' + action_id
     assert re.match(_TIME_REGEX, body['fade']['timeRequested']) is not None
     assert re.match(_TIME_REGEX, body['fade']['timeCompleted']) is not None
     assert body['fade']['status'] == 'completed'
@@ -248,14 +253,14 @@ def run_client():
     assert message['messageType'] == 'actionStatus'
     assert message['data']['fade']['input']['level'] == 100
     assert message['data']['fade']['input']['duration'] == 500
-    assert message['data']['fade']['href'].startswith('/actions/fade/')
+    assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
     assert message['data']['fade']['status'] == 'created'
     assert re.match(_TIME_REGEX, message['data']['fade']['timeRequested']) is not None
     message = json.loads(ws.recv())
     assert message['messageType'] == 'actionStatus'
     assert message['data']['fade']['input']['level'] == 100
     assert message['data']['fade']['input']['duration'] == 500
-    assert message['data']['fade']['href'].startswith('/actions/fade/')
+    assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
     assert message['data']['fade']['status'] == 'pending'
     assert re.match(_TIME_REGEX, message['data']['fade']['timeRequested']) is not None
     message = json.loads(ws.recv())
@@ -269,7 +274,7 @@ def run_client():
     assert message['messageType'] == 'actionStatus'
     assert message['data']['fade']['input']['level'] == 100
     assert message['data']['fade']['input']['duration'] == 500
-    assert message['data']['fade']['href'].startswith('/actions/fade/')
+    assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
     assert message['data']['fade']['status'] == 'completed'
     assert re.match(_TIME_REGEX, message['data']['fade']['timeRequested']) is not None
     assert re.match(_TIME_REGEX, message['data']['fade']['timeCompleted']) is not None

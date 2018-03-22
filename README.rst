@@ -40,7 +40,7 @@ Example
             self.thing.add_event(OverheatedEvent(self.thing, 102))
 
 
-    def run_server():
+    def make_thing():
         thing = Thing(name='My Lamp', description='A web connected lamp')
 
         thing.add_property(
@@ -87,7 +87,16 @@ Example
              'type': 'number',
              'unit': 'celcius'})
 
-        server = WebThingServer(thing, port=8888)
+        return thing
+
+
+    def run_server():
+        thing = make_thing()
+
+        # If adding more than one thing here, be sure to set the `name`
+        # parameter to some string, which will be broadcast via mDNS.
+        # In the single thing case, the thing's name will be broadcast.
+        server = WebThingServer([thing], port=8888)
         try:
             server.start()
         except KeyboardInterrupt:

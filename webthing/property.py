@@ -1,5 +1,7 @@
 """High-level Property base class implementation."""
 
+from copy import copy
+
 
 class Property:
     """A Property represents an individual state value of a thing."""
@@ -17,8 +19,17 @@ class Property:
         self.thing = thing
         self.name = name
         self.value = value
+        self.href_prefix = ''
+        self.href = '/properties/{}'.format(self.name)
         self.metadata = metadata if metadata is not None else {}
-        self.metadata['href'] = '/properties/{}'.format(self.name)
+
+    def set_href_prefix(self, prefix):
+        """
+        Set the prefix of any hrefs associated with this property.
+
+        prefix -- the prefix
+        """
+        self.href_prefix = prefix
 
     def as_property_description(self):
         """
@@ -26,7 +37,9 @@ class Property:
 
         Returns a dictionary describing the property.
         """
-        return self.metadata
+        description = copy(self.metadata)
+        description['href'] = self.href_prefix + self.href
+        return description
 
     def set_cached_value(self, value):
         """

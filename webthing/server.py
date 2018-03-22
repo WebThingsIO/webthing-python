@@ -22,42 +22,102 @@ def perform_action(action):
 class BaseHandler(tornado.web.RequestHandler):
     """Base handler that is initialized with a thing."""
 
-    def initialize(self, thing):
+    def initialize(self, things):
         """
         Initialize the handler.
 
-        thing -- the Thing managed by this server
+        things -- list of Things managed by this server
         """
-        self.thing = thing
+        self.things = things
+
+    def get_thing(self, thing_id):
+        """
+        Get the thing this request is for.
+
+        thing_id -- ID of the thing to get, in string form
+
+        Returns the thing, or None if not found.
+        """
+        if len(self.things) > 1:
+            try:
+                thing_id = int(thing_id)
+            except ValueError:
+                return None
+
+            if thing_id >= len(self.things):
+                return None
+
+            return self.things[thing_id]
+        else:
+            return self.things[0]
+
+
+class ThingsHandler(BaseHandler):
+    """Handle a request to / when the server manages multiple things."""
+
+    def get(self):
+        """
+        Handle a GET request.
+
+        property_name -- the name of the property from the URL path
+        """
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps([
+            thing.as_thing_description()
+            for idx, thing in enumerate(self.things)
+        ]))
 
 
 class ThingHandler(tornado.websocket.WebSocketHandler):
     """Handle a request to /."""
 
-    def initialize(self, thing, ip, port):
+    def initialize(self, things):
         """
         Initialize the handler.
 
-        thing -- the Thing managed by this server
-        ip -- local IP address of the server
-        port -- port the server is listening on
+        things -- list of Things managed by this server
         """
-        self.thing = thing
-        if self.application.is_tls:
-            self.ws_path = 'wss://{}:{}/'.format(ip, port)
+        self.things = things
+
+    def get_thing(self, thing_id):
+        """
+        Get the thing this request is for.
+
+        thing_id -- ID of the thing to get, in string form
+
+        Returns the thing, or None if not found.
+        """
+        if len(self.things) > 1:
+            try:
+                thing_id = int(thing_id)
+            except ValueError:
+                return None
+
+            if thing_id >= len(self.things):
+                return None
+
+            return self.things[thing_id]
         else:
-            self.ws_path = 'ws://{}:{}/'.format(ip, port)
+            return self.things[0]
 
     @tornado.web.asynchronous
-    def get(self, *args, **kwargs):
-        """Handle a GET request, including websocket requests."""
+    def get(self, thing_id='0'):
+        """
+        Handle a GET request, including websocket requests.
+
+        thing_id -- ID of the thing this request is for
+        """
+        self.thing = self.get_thing(thing_id)
+        if self.thing is None:
+            self.set_status(404)
+            return
+
         if self.request.headers.get('Upgrade', '').lower() == 'websocket':
-            tornado.websocket.WebSocketHandler.get(self, *args, **kwargs)
+            tornado.websocket.WebSocketHandler.get(self)
             return
 
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps(
-            self.thing.as_thing_description(ws_path=self.ws_path)))
+        self.write(json.dumps(self.thing.as_thing_description()))
         self.finish()
 
     def open(self):
@@ -143,38 +203,57 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
 class PropertiesHandler(BaseHandler):
     """Handle a request to /properties."""
 
-    def get(self):
+    def get(self, thing_id='0'):
         """
         Handle a GET request.
 
         TODO: this is not yet defined in the spec
+
+        thing_id -- ID of the thing this request is for
         """
+        thing_id = int(thing_id)
+        if thing_id >= len(self.things):
+            self.set_status(404)
+            return
+
         pass
 
 
 class PropertyHandler(BaseHandler):
     """Handle a request to /properties/<property>."""
 
-    def get(self, property_name):
+    def get(self, thing_id='0', property_name=None):
         """
         Handle a GET request.
 
+        thing_id -- ID of the thing this request is for
         property_name -- the name of the property from the URL path
         """
-        if self.thing.has_property(property_name):
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
+
+        if thing.has_property(property_name):
             self.set_header('Content-Type', 'application/json')
             self.write(json.dumps({
-                property_name: self.thing.get_property(property_name),
+                property_name: thing.get_property(property_name),
             }))
         else:
             self.set_status(404)
 
-    def put(self, property_name):
+    def put(self, thing_id='0', property_name=None):
         """
         Handle a PUT request.
 
+        thing_id -- ID of the thing this request is for
         property_name -- the name of the property from the URL path
         """
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
+
         try:
             args = json.loads(self.request.body)
         except ValueError:
@@ -185,11 +264,11 @@ class PropertyHandler(BaseHandler):
             self.set_status(400)
             return
 
-        if self.thing.has_property(property_name):
-            self.thing.set_property(property_name, args[property_name])
+        if thing.has_property(property_name):
+            thing.set_property(property_name, args[property_name])
             self.set_header('Content-Type', 'application/json')
             self.write(json.dumps({
-                property_name: self.thing.get_property(property_name),
+                property_name: thing.get_property(property_name),
             }))
         else:
             self.set_status(404)
@@ -198,13 +277,31 @@ class PropertyHandler(BaseHandler):
 class ActionsHandler(BaseHandler):
     """Handle a request to /actions."""
 
-    def get(self):
-        """Handle a GET request."""
-        self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps(self.thing.get_action_descriptions()))
+    def get(self, thing_id='0'):
+        """
+        Handle a GET request.
 
-    def post(self):
-        """Handle a POST request."""
+        thing_id -- ID of the thing this request is for
+        """
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
+
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(thing.get_action_descriptions()))
+
+    def post(self, thing_id='0'):
+        """
+        Handle a POST request.
+
+        thing_id -- ID of the thing this request is for
+        """
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
+
         try:
             message = json.loads(self.request.body)
         except ValueError:
@@ -217,7 +314,7 @@ class ActionsHandler(BaseHandler):
             if 'input' in action_params:
                 input_ = action_params['input']
 
-            action = self.thing.perform_action(action_name, input_)
+            action = thing.perform_action(action_name, input_)
             response.update(action.as_action_description())
 
             # Start the action
@@ -233,28 +330,40 @@ class ActionsHandler(BaseHandler):
 class ActionHandler(BaseHandler):
     """Handle a request to /actions/<action_name>."""
 
-    def get(self, action_name):
+    def get(self, thing_id='0', action_name=None):
         """
         Handle a GET request.
 
         TODO: this is not yet defined in the spec
 
+        thing_id -- ID of the thing this request is for
         action_name -- name of the action from the URL path
         """
-        pass
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
+
+        self.set_status(200)
 
 
 class ActionIDHandler(BaseHandler):
     """Handle a request to /actions/<action_name>/<action_id>."""
 
-    def get(self, action_name, action_id):
+    def get(self, thing_id='0', action_name=None, action_id=None):
         """
         Handle a GET request.
 
+        thing_id -- ID of the thing this request is for
         action_name -- name of the action from the URL path
         action_id -- the action ID from the URL path
         """
-        action = self.thing.get_action(action_name, action_id)
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
+
+        action = thing.get_action(action_name, action_id)
         if action is None:
             self.set_status(404)
             return
@@ -262,25 +371,37 @@ class ActionIDHandler(BaseHandler):
         self.set_header('Content-Type', 'application/json')
         self.write(json.dumps(action.as_action_description()))
 
-    def put(self, action_name, action_id):
+    def put(self, thing_id='0', action_name=None, action_id=None):
         """
         Handle a PUT request.
 
         TODO: this is not yet defined in the spec
 
+        thing_id -- ID of the thing this request is for
         action_name -- name of the action from the URL path
         action_id -- the action ID from the URL path
         """
-        pass
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
 
-    def delete(self, action_name, action_id):
+        self.set_status(200)
+
+    def delete(self, thing_id='0', action_name=None, action_id=None):
         """
         Handle a DELETE request.
 
+        thing_id -- ID of the thing this request is for
         action_name -- name of the action from the URL path
         action_id -- the action ID from the URL path
         """
-        action = self.thing.get_action(action_name, action_id)
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
+
+        action = thing.get_action(action_name, action_id)
         if action is None:
             self.set_status(404)
             return
@@ -292,83 +413,172 @@ class ActionIDHandler(BaseHandler):
 class EventsHandler(BaseHandler):
     """Handle a request to /events."""
 
-    def get(self):
-        """Handle a GET request."""
+    def get(self, thing_id='0'):
+        """
+        Handle a GET request.
+
+        thing_id -- ID of the thing this request is for
+        """
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
+
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps(self.thing.get_event_descriptions()))
+        self.write(json.dumps(thing.get_event_descriptions()))
 
 
 class EventHandler(BaseHandler):
     """Handle a request to /events/<event_name>."""
 
-    def get(self, event_name):
+    def get(self, thing_id='0', event_name=None):
         """
         Handle a GET request.
 
         TODO: this is not yet defined in the spec
 
+        thing_id -- ID of the thing this request is for
         event_name -- name of the event from the URL path
         """
-        pass
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
+
+        self.set_status(200)
 
 
 class WebThingServer:
     """Server to represent a Web Thing over HTTP."""
 
-    def __init__(self, thing, port=80, ssl_options=None):
+    def __init__(self, things, name=None, port=80, ssl_options=None):
         """
         Initialize the WebThingServer.
 
-        thing -- the Thing managed by this server
+        things -- list of Things managed by this server
+        name -- name of this device -- this is only needed if the server is
+                managing multiple things
         port -- port to listen on (defaults to 80)
         ssl_options -- dict of SSL options to pass to the tornado server
         """
-        self.thing = thing
+        if type(things) is not list:
+            things = [things]
+
+        self.things = things
         self.port = port
         self.ip = get_ip()
 
-        self.app = tornado.web.Application([
-            (
-                r'/?',
-                ThingHandler,
-                dict(thing=self.thing, ip=self.ip, port=self.port),
-            ),
-            (
-                r'/properties/?',
-                PropertiesHandler,
-                dict(thing=self.thing),
-            ),
-            (
-                r'/properties/([^/]+)/?',
-                PropertyHandler,
-                dict(thing=self.thing),
-            ),
-            (
-                r'/actions/?',
-                ActionsHandler,
-                dict(thing=self.thing),
-            ),
-            (
-                r'/actions/([^/]+)/?',
-                ActionHandler,
-                dict(thing=self.thing),
-            ),
-            (
-                r'/actions/([^/]+)/([^/]+)/?',
-                ActionIDHandler,
-                dict(thing=self.thing),
-            ),
-            (
-                r'/events/?',
-                EventsHandler,
-                dict(thing=self.thing),
-            ),
-            (
-                r'/events/([^/]+)/?',
-                EventHandler,
-                dict(thing=self.thing),
-            ),
-        ])
+        if len(self.things) > 1 and not name:
+            raise Exception('name must be set when managing multiple things')
+
+        if len(self.things) > 1:
+            for idx, thing in enumerate(self.things):
+                thing.set_href_prefix('/{}'.format(idx))
+                thing.set_ws_href('{}://{}:{}/{}'.format(
+                    'wss' if ssl_options is not None else 'ws',
+                    self.ip,
+                    self.port,
+                    idx))
+
+            self.name = name
+            handlers = [
+                (
+                    r'/?',
+                    ThingsHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/(?P<thing_id>\d+)/?',
+                    ThingHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/(?P<thing_id>\d+)/properties/?',
+                    PropertiesHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/(?P<thing_id>\d+)/properties/(?P<property_name>[^/]+)/?',
+                    PropertyHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/(?P<thing_id>\d+)/actions/?',
+                    ActionsHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/(?P<thing_id>\d+)/actions/(?P<action_name>[^/]+)/?',
+                    ActionHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/(?P<thing_id>\d+)/actions/(?P<action_name>[^/]+)/(?P<action_id>[^/]+)/?',
+                    ActionIDHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/(?P<thing_id>\d+)/events/?',
+                    EventsHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/(?P<thing_id>\d+)/events/(?P<event_name>[^/]+)/?',
+                    EventHandler,
+                    dict(things=self.things),
+                ),
+            ]
+        else:
+            self.things[0].set_ws_href('{}://{}:{}'.format(
+                'wss' if ssl_options is not None else 'ws',
+                self.ip,
+                self.port))
+
+            self.name = self.things[0].name
+            handlers = [
+                (
+                    r'/?',
+                    ThingHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/properties/?',
+                    PropertiesHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/properties/(?P<property_name>[^/]+)/?',
+                    PropertyHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/actions/?',
+                    ActionsHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/actions/(?P<action_name>[^/]+)/?',
+                    ActionHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/actions/(?P<action_name>[^/]+)/(?P<action_id>[^/]+)/?',
+                    ActionIDHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/events/?',
+                    EventsHandler,
+                    dict(things=self.things),
+                ),
+                (
+                    r'/events/(?P<event_name>[^/]+)/?',
+                    EventHandler,
+                    dict(things=self.things),
+                ),
+            ]
+
+        self.app = tornado.web.Application(handlers)
         self.app.is_tls = ssl_options is not None
         self.server = tornado.httpserver.HTTPServer(self.app,
                                                     ssl_options=ssl_options)
@@ -380,7 +590,7 @@ class WebThingServer:
                                    self.port)
         self.service_info = ServiceInfo(
             '_webthing._sub._http._tcp.local.',
-            '{}._http._tcp.local.'.format(self.thing.name),
+            '{}._http._tcp.local.'.format(self.name),
             address=socket.inet_aton(self.ip),
             port=self.port,
             properties={
