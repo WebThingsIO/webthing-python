@@ -301,6 +301,23 @@ class Thing:
         self.actions[action_name].append(action)
         return action
 
+    def remove_action(self, action_name, action_id):
+        """
+        Remove an existing action.
+
+        action_name -- name of the action
+        action_id -- ID of the action
+
+        Returns a boolean indicating the presence of the action.
+        """
+        action = self.get_action(action_name, action_id)
+        if action is None:
+            return False
+
+        action.cancel()
+        self.actions[action_name].remove(action)
+        return True
+
     def add_available_action(self, name, metadata, cls):
         """
         Add an available action.
