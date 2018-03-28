@@ -401,13 +401,10 @@ class ActionIDHandler(BaseHandler):
             self.set_status(404)
             return
 
-        action = thing.get_action(action_name, action_id)
-        if action is None:
+        if thing.remove_action(action_name, action_id):
+            self.set_status(204)
+        else:
             self.set_status(404)
-            return
-
-        action.cancel()
-        self.set_status(204)
 
 
 class EventsHandler(BaseHandler):
@@ -498,7 +495,8 @@ class WebThingServer:
                     dict(things=self.things),
                 ),
                 (
-                    r'/(?P<thing_id>\d+)/properties/(?P<property_name>[^/]+)/?',
+                    r'/(?P<thing_id>\d+)/properties/' +
+                    r'(?P<property_name>[^/]+)/?',
                     PropertyHandler,
                     dict(things=self.things),
                 ),
@@ -513,7 +511,8 @@ class WebThingServer:
                     dict(things=self.things),
                 ),
                 (
-                    r'/(?P<thing_id>\d+)/actions/(?P<action_name>[^/]+)/(?P<action_id>[^/]+)/?',
+                    r'/(?P<thing_id>\d+)/actions/' +
+                    r'(?P<action_name>[^/]+)/(?P<action_id>[^/]+)/?',
                     ActionIDHandler,
                     dict(things=self.things),
                 ),

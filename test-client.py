@@ -13,29 +13,32 @@ _TIME_REGEX = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$'
 _PROTO = 'http'
 _BASE_URL = '{}:8888'.format(get_ip())
 _PATH_PREFIX = ''
+_AUTHORIZATION_HEADER = None
 
 
 def http_request(method, path, data=None):
     url = _PROTO + '://' + _BASE_URL + _PATH_PREFIX + path
 
     client = tornado.httpclient.HTTPClient()
+    headers = {
+        'Accept': 'application/json',
+    }
+
+    if _AUTHORIZATION_HEADER is not None:
+        headers['Authorization'] = _AUTHORIZATION_HEADER
 
     if data is None:
         request = tornado.httpclient.HTTPRequest(
             url,
             method=method,
-            headers={
-                'Accept': 'application/json',
-            },
+            headers=headers,
         )
     else:
+        headers['Content-Type'] = 'application/json'
         request = tornado.httpclient.HTTPRequest(
             url,
             method=method,
-            headers={
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
+            headers=headers,
             body=json.dumps(data),
         )
 
@@ -74,7 +77,7 @@ def run_client():
     assert body['events']['overheated']['unit'] == 'celcius'
     assert body['events']['overheated']['description'] == 'The lamp has exceeded its safe operating temperature'
     assert body['events']['overheated']['href'] == _PATH_PREFIX + '/events/overheated'
-    assert len(body['links']) == 4
+    assert len(body['links']) >= 4
     assert body['links'][0]['rel'] == 'properties'
     assert body['links'][0]['href'] == _PATH_PREFIX + '/properties'
     assert body['links'][1]['rel'] == 'actions'
@@ -82,9 +85,16 @@ def run_client():
     assert body['links'][2]['rel'] == 'events'
     assert body['links'][2]['href'] == _PATH_PREFIX + '/events'
     assert body['links'][3]['rel'] == 'alternate'
-    assert body['links'][3]['href'] == '{}://{}{}'.format(
-        'wss' if _PROTO == 'https' else 'ws', _BASE_URL, _PATH_PREFIX)
-    ws_href = body['links'][3]['href']
+
+    ws_href = None
+    for link in body['links'][3:]:
+        if 'mediaType' in link:
+            assert link['mediaType'] == 'text/html'
+            assert link['href'] == _PATH_PREFIX
+        else:
+            assert link['href'] == '{}://{}{}'.format(
+                'wss' if _PROTO == 'https' else 'ws', _BASE_URL, _PATH_PREFIX)
+            ws_href = link['href']
 
     # Test properties
     code, body = http_request('GET', '/properties/level')
@@ -126,6 +136,8 @@ def run_client():
     assert body['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
     assert body['fade']['status'] == 'created'
     action_id = body['fade']['href'].split('/')[-1]
+
+    # Wait for the action to complete
     time.sleep(2.5)
 
     code, body = http_request('GET', '/actions')
@@ -153,6 +165,9 @@ def run_client():
 
     # Set up a websocket
     ws = websocket.WebSocket()
+    if _AUTHORIZATION_HEADER is not None:
+        ws_href += '?jwt=' + _AUTHORIZATION_HEADER.split(' ')[1]
+
     ws.connect(ws_href)
 
     # Test setting property through websocket
@@ -182,7 +197,15 @@ def run_client():
             },
         }
     }))
-    message = json.loads(ws.recv())
+
+    # Handle any extra propertyStatus message first
+    while True:
+        message = json.loads(ws.recv())
+        if message['messageType'] == 'propertyStatus':
+            continue
+
+        break
+
     assert message['messageType'] == 'actionStatus'
     assert message['data']['fade']['input']['level'] == 90
     assert message['data']['fade']['input']['duration'] == 1000
@@ -207,14 +230,14 @@ def run_client():
 
     code, body = http_request('GET', '/actions')
     assert code == 200
-    assert len(body) == 2
-    assert len(body[1].keys()) == 1
-    assert body[1]['fade']['input']['level'] == 90
-    assert body[1]['fade']['input']['duration'] == 1000
-    assert body[1]['fade']['href'] == _PATH_PREFIX + '/actions/fade/' + action_id
-    assert re.match(_TIME_REGEX, body[1]['fade']['timeRequested']) is not None
-    assert re.match(_TIME_REGEX, body[1]['fade']['timeCompleted']) is not None
-    assert body[1]['fade']['status'] == 'completed'
+    assert len(body) == 1
+    assert len(body[0].keys()) == 1
+    assert body[0]['fade']['input']['level'] == 90
+    assert body[0]['fade']['input']['duration'] == 1000
+    assert body[0]['fade']['href'] == _PATH_PREFIX + '/actions/fade/' + action_id
+    assert re.match(_TIME_REGEX, body[0]['fade']['timeRequested']) is not None
+    assert re.match(_TIME_REGEX, body[0]['fade']['timeCompleted']) is not None
+    assert body[0]['fade']['status'] == 'completed'
 
     code, body = http_request('GET', '/actions/fade/' + action_id)
     assert code == 200

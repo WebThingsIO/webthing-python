@@ -19,7 +19,7 @@ else:
 
 setup(
     name='webthing',
-    version='0.4.0',
+    version='0.4.1',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',
