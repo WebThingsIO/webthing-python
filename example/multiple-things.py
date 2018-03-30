@@ -23,7 +23,7 @@ class FadeAction(Action):
         self.thing.add_event(OverheatedEvent(self.thing, 102))
 
 
-class ExampleDimmableLight(object):
+class ExampleDimmableLight:
     """A dimmable light that logs received commands to stdout."""
 
     def __init__(self):

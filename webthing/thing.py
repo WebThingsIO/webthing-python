@@ -4,7 +4,7 @@ import json
 import tornado.websocket
 
 
-class Thing(object):
+class Thing:
     """A Web Thing."""
 
     def __init__(self, name, type_='thing', description=''):

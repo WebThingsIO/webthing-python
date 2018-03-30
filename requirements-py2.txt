@@ -1,3 +1,0 @@
-eventemitter
-tornado
-zeroconf==0.19.1

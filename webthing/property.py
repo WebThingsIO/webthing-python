@@ -3,7 +3,7 @@
 from copy import copy
 
 
-class Property(object):
+class Property:
     """A Property represents an individual state value of a thing."""
 
     def __init__(self, thing, name, value, metadata=None):

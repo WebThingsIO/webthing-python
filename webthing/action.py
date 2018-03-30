@@ -3,7 +3,7 @@
 from .utils import timestamp
 
 
-class Action(object):
+class Action:
     """An Action represents an individual action on a thing."""
 
     def __init__(self, id_, thing, name, input_):

@@ -459,7 +459,7 @@ class EventHandler(BaseHandler):
         self.set_status(200)
 
 
-class WebThingServer(object):
+class WebThingServer:
     """Server to represent a Web Thing over HTTP."""
 
     def __init__(self, things, name=None, port=80, ssl_options=None):
