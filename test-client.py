@@ -74,7 +74,7 @@ def run_client():
     assert body['actions']['fade']['input']['properties']['duration']['unit'] == 'milliseconds'
     assert body['actions']['fade']['href'] == _PATH_PREFIX + '/actions/fade'
     assert body['events']['overheated']['type'] == 'number'
-    assert body['events']['overheated']['unit'] == 'celcius'
+    assert body['events']['overheated']['unit'] == 'celsius'
     assert body['events']['overheated']['description'] == 'The lamp has exceeded its safe operating temperature'
     assert body['events']['overheated']['href'] == _PATH_PREFIX + '/events/overheated'
     assert len(body['links']) >= 4
@@ -217,16 +217,28 @@ def run_client():
     assert message['data']['fade']['input']['duration'] == 1000
     assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
     assert message['data']['fade']['status'] == 'pending'
-    message = json.loads(ws.recv())
-    assert message['messageType'] == 'propertyStatus'
-    assert message['data']['level'] == 90
-    message = json.loads(ws.recv())
-    assert message['messageType'] == 'actionStatus'
-    assert message['data']['fade']['input']['level'] == 90
-    assert message['data']['fade']['input']['duration'] == 1000
-    assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
-    assert message['data']['fade']['status'] == 'completed'
-    action_id = message['data']['fade']['href'].split('/')[-1]
+
+    # These may come out of order
+    action_id = None
+    received = [False, False]
+    for _ in range(0, 2):
+        message = json.loads(ws.recv())
+
+        if message['messageType'] == 'propertyStatus':
+            assert message['data']['level'] == 90
+            received[0] = True
+        elif message['messageType'] == 'actionStatus':
+            assert message['data']['fade']['input']['level'] == 90
+            assert message['data']['fade']['input']['duration'] == 1000
+            assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
+            assert message['data']['fade']['status'] == 'completed'
+            action_id = message['data']['fade']['href'].split('/')[-1]
+            received[1] = True
+        else:
+            raise ValueError('Wrong message: {}'.format(message['messageType']))
+
+    for r in received:
+        assert r
 
     code, body = http_request('GET', '/actions')
     assert code == 200
@@ -286,21 +298,30 @@ def run_client():
     assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
     assert message['data']['fade']['status'] == 'pending'
     assert re.match(_TIME_REGEX, message['data']['fade']['timeRequested']) is not None
-    message = json.loads(ws.recv())
-    assert message['messageType'] == 'propertyStatus'
-    assert message['data']['level'] == 100
-    message = json.loads(ws.recv())
-    assert message['messageType'] == 'event'
-    assert message['data']['overheated']['data'] == 102
-    assert re.match(_TIME_REGEX, message['data']['overheated']['timestamp']) is not None
-    message = json.loads(ws.recv())
-    assert message['messageType'] == 'actionStatus'
-    assert message['data']['fade']['input']['level'] == 100
-    assert message['data']['fade']['input']['duration'] == 500
-    assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
-    assert message['data']['fade']['status'] == 'completed'
-    assert re.match(_TIME_REGEX, message['data']['fade']['timeRequested']) is not None
-    assert re.match(_TIME_REGEX, message['data']['fade']['timeCompleted']) is not None
+
+    # These may come out of order
+    received = [False, False, False]
+    for _ in range(0, 3):
+        message = json.loads(ws.recv())
+
+        if message['messageType'] == 'propertyStatus':
+            assert message['data']['level'] == 100
+            received[0] = True
+        elif message['messageType'] == 'event':
+            assert message['data']['overheated']['data'] == 102
+            assert re.match(_TIME_REGEX, message['data']['overheated']['timestamp']) is not None
+            received[1] = True
+        elif message['messageType'] == 'actionStatus':
+            assert message['data']['fade']['input']['level'] == 100
+            assert message['data']['fade']['input']['duration'] == 500
+            assert message['data']['fade']['href'].startswith(_PATH_PREFIX + '/actions/fade/')
+            assert message['data']['fade']['status'] == 'completed'
+            assert re.match(_TIME_REGEX, message['data']['fade']['timeRequested']) is not None
+            assert re.match(_TIME_REGEX, message['data']['fade']['timeCompleted']) is not None
+            received[2] = True
+
+    for r in received:
+        assert r
 
     ws.close()
 
