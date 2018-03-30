@@ -3,7 +3,7 @@
 from .utils import timestamp
 
 
-class Event:
+class Event(object):
     """An Event represents an individual event from a thing."""
 
     def __init__(self, thing, name, data=None):

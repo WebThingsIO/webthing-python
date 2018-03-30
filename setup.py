@@ -13,13 +13,13 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 if sys.version_info.major == 2:
-    requirements = ['tornado', 'zeroconf==0.19.1']
+    requirements = ['eventemitter', 'tornado', 'zeroconf==0.19.1']
 else:
-    requirements = ['tornado', 'zeroconf']
+    requirements = ['eventemitter', 'tornado', 'zeroconf']
 
 setup(
     name='webthing',
-    version='0.4.1',
+    version='0.5.0',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',

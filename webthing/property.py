@@ -3,18 +3,18 @@
 from copy import copy
 
 
-class Property:
+class Property(object):
     """A Property represents an individual state value of a thing."""
 
-    def __init__(self, thing, name, metadata=None, value=None):
+    def __init__(self, thing, name, value, metadata=None):
         """
         Initialize the object.
 
         thing -- the Thing this property belongs to
         name -- name of the property
+        value -- Value object to hold the property value
         metadata -- property metadata, i.e. type, description, unit, etc.,
                     as a dict
-        value -- initial value of property
         """
         self.thing = thing
         self.name = name
@@ -22,6 +22,10 @@ class Property:
         self.href_prefix = ''
         self.href = '/properties/{}'.format(self.name)
         self.metadata = metadata if metadata is not None else {}
+
+        # Add the property change observer to notify the Thing about a property
+        # change.
+        self.value.on('update', lambda _: self.thing.property_notify(self))
 
     def set_href_prefix(self, prefix):
         """
@@ -41,30 +45,13 @@ class Property:
         description['href'] = self.href_prefix + self.href
         return description
 
-    def set_cached_value(self, value):
-        """
-        Set the cached value of the property, making adjustments as necessary.
-
-        value -- the value to set
-
-        Returns the value that was set.
-        """
-        if 'type' in self.metadata and \
-                self.metadata['type'] == 'boolean':
-            self.value = bool(value)
-        else:
-            self.value = value
-
-        self.thing.property_notify(self)
-        return self.value
-
     def get_value(self):
         """
         Get the current property value.
 
         Returns the value.
         """
-        return self.value
+        return self.value.get()
 
     def set_value(self, value):
         """
@@ -72,7 +59,7 @@ class Property:
 
         value -- the value to set
         """
-        self.set_cached_value(value)
+        self.value.set(value)
 
     def get_name(self):
         """

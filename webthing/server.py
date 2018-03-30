@@ -163,7 +163,16 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
         msg_type = message['messageType']
         if msg_type == 'setProperty':
             for property_name, property_value in message['data'].items():
-                self.thing.set_property(property_name, property_value)
+                try:
+                    self.thing.set_property(property_name, property_value)
+                except AttributeError:
+                    self.write_message(json.dumps({
+                        'messageType': 'error',
+                        'data': {
+                            'status': '403 Forbidden',
+                            'message': 'Read-only property',
+                        },
+                    }))
         elif msg_type == 'requestAction':
             for action_name, action_params in message['data'].items():
                 input_ = None
@@ -265,7 +274,12 @@ class PropertyHandler(BaseHandler):
             return
 
         if thing.has_property(property_name):
-            thing.set_property(property_name, args[property_name])
+            try:
+                thing.set_property(property_name, args[property_name])
+            except AttributeError:
+                self.set_status(403)
+                return
+
             self.set_header('Content-Type', 'application/json')
             self.write(json.dumps({
                 property_name: thing.get_property(property_name),
@@ -445,7 +459,7 @@ class EventHandler(BaseHandler):
         self.set_status(200)
 
 
-class WebThingServer:
+class WebThingServer(object):
     """Server to represent a Web Thing over HTTP."""
 
     def __init__(self, things, name=None, port=80, ssl_options=None):
