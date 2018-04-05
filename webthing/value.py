@@ -15,23 +15,23 @@ class Value(EventEmitter):
     reports a new value.
     """
 
-    def __init__(self, initial_value, setter=None):
+    def __init__(self, initial_value, value_forwarder=None):
         """
         Initialize the object.
 
         initial_value -- the initial value
-        setter -- the method that updates the actual value on the thing
+        value_forwarder -- the method that updates the actual value on the thing
         """
         EventEmitter.__init__(self)
         self.last_value = initial_value
 
-        if setter is None:
+        if value_forwarder is None:
             def fn(_):
                 raise AttributeError('Read-only value')
 
-            self.setter = fn
+            self.value_forwarder = fn
         else:
-            self.setter = setter
+            self.value_forwarder = value_forwarder
 
     def set(self, value):
         """
@@ -39,7 +39,7 @@ class Value(EventEmitter):
 
         value -- value to set
         """
-        self.setter(value)
+        self.value_forwarder(value)
         self.notify_of_external_update(value)
 
     def get(self):
