@@ -16,7 +16,7 @@ requirements = ['eventemitter', 'tornado', 'zeroconf']
 
 setup(
     name='webthing',
-    version='0.5.0',
+    version='0.5.1',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',

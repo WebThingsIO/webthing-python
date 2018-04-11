@@ -264,7 +264,7 @@ class PropertyHandler(BaseHandler):
             return
 
         try:
-            args = json.loads(self.request.body)
+            args = json.loads(self.request.body.decode())
         except ValueError:
             self.set_status(400)
             return
@@ -317,7 +317,7 @@ class ActionsHandler(BaseHandler):
             return
 
         try:
-            message = json.loads(self.request.body)
+            message = json.loads(self.request.body.decode())
         except ValueError:
             self.set_status(400)
             return
