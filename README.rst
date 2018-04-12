@@ -138,12 +138,15 @@ Now we have a sensor that constantly reports 0%. To make it usable, we need a th
 
 .. code:: python
 
+  ioloop = tornado.ioloop.IOLoop.current()
+
   def update_level():
       while True:
           time.sleep(3)
 
           # Update the underlying value, which in turn notifies all listeners
-          level.notify_of_external_update(read_from_gpio())
+          ioloop.add_callback(level.notify_of_external_update,
+                              read_from_gpio())
 
   t = threading.Thread(target=update_level)
   t.daemon = True
