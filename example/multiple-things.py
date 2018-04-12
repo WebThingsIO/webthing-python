@@ -1,6 +1,7 @@
 import random
 import threading
 import time
+import tornado.ioloop
 import uuid
 
 from webthing import Action, Event, Property, Thing, Value, WebThingServer
@@ -110,6 +111,7 @@ class FakeGpioHumiditySensor:
                          'unit': '%',
                      }))
 
+        self.ioloop = tornado.ioloop.IOLoop.current()
         t = threading.Thread(target=self.update_level)
         t.daemon = True
         t.start()
@@ -119,7 +121,8 @@ class FakeGpioHumiditySensor:
             time.sleep(3)
 
             # Update the underlying value, which in turn notifies all listeners
-            self.level.notify_of_external_update(self.read_from_gpio())
+            self.ioloop.add_callback(self.level.notify_of_external_update,
+                                     self.read_from_gpio())
 
     @staticmethod
     def read_from_gpio():
