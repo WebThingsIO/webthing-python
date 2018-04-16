@@ -1,3 +1,4 @@
 eventemitter
+jsonschema
 tornado
 zeroconf

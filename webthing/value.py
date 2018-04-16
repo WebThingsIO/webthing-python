@@ -20,7 +20,8 @@ class Value(EventEmitter):
         Initialize the object.
 
         initial_value -- the initial value
-        value_forwarder -- the method that updates the actual value on the thing
+        value_forwarder -- the method that updates the actual value on the
+                           thing
         """
         EventEmitter.__init__(self)
         self.last_value = initial_value

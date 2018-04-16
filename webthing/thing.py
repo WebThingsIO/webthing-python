@@ -1,5 +1,7 @@
 """High-level Thing base class implementation."""
 
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
 import json
 import tornado.websocket
 
@@ -292,10 +294,17 @@ class Thing:
         Returns the action that was created.
         """
         if action_name not in self.available_actions:
-            return
+            return None
 
-        action = self.available_actions[action_name]['class'](self,
-                                                              input_=input_)
+        action_type = self.available_actions[action_name]
+
+        if 'input' in action_type['metadata']:
+            try:
+                validate(input_, action_type['metadata']['input'])
+            except ValidationError:
+                return None
+
+        action = action_type['class'](self, input_=input_)
         action.set_href_prefix(self.href_prefix)
         self.action_notify(action)
         self.actions[action_name].append(action)

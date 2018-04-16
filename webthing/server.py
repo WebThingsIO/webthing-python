@@ -180,16 +180,26 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
                     input_ = action_params['input']
 
                 action = self.thing.perform_action(action_name, input_)
-                tornado.ioloop.IOLoop.current().spawn_callback(
-                    perform_action,
-                    action,
-                )
+                if action:
+                    tornado.ioloop.IOLoop.current().spawn_callback(
+                        perform_action,
+                        action,
+                    )
+                else:
+                    self.write_message(json.dumps({
+                        'messageType': 'error',
+                        'data': {
+                            'status': '400 Bad Request',
+                            'message': 'Invalid action request',
+                            'request': message,
+                        },
+                    }))
         elif msg_type == 'addEventSubscription':
             for event_name in message['data'].keys():
                 self.thing.add_event_subscriber(event_name, self)
         else:
             try:
-                self.send_message(json.dumps({
+                self.write_message(json.dumps({
                     'messageType': 'error',
                     'data': {
                         'status': '400 Bad Request',
@@ -329,13 +339,14 @@ class ActionsHandler(BaseHandler):
                 input_ = action_params['input']
 
             action = thing.perform_action(action_name, input_)
-            response.update(action.as_action_description())
+            if action:
+                response.update(action.as_action_description())
 
-            # Start the action
-            tornado.ioloop.IOLoop.current().spawn_callback(
-                perform_action,
-                action,
-            )
+                # Start the action
+                tornado.ioloop.IOLoop.current().spawn_callback(
+                    perform_action,
+                    action,
+                )
 
         self.set_status(201)
         self.write(json.dumps(response))
