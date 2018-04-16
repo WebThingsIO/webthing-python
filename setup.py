@@ -12,11 +12,11 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-requirements = ['eventemitter', 'tornado', 'zeroconf']
+requirements = ['eventemitter', 'jsonschema', 'tornado', 'zeroconf']
 
 setup(
     name='webthing',
-    version='0.5.2',
+    version='0.5.3',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',
