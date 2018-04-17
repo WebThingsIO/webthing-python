@@ -15,7 +15,7 @@ Installation
 Example
 =======
 
-In this example we will set up a dimmable light and a humidity sensor (both using fake data, of course). Both working examples can be found in `here <https://github.com/mozilla-iot/webthing-java/tree/master/src/main/java/org/mozilla/iot/webthing/example>`_.
+In this example we will set up a dimmable light and a humidity sensor (both using fake data, of course). Both working examples can be found in `here <https://github.com/mozilla-iot/webthing-python/tree/master/example>`_.
 
 Dimmable Light
 --------------
