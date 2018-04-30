@@ -25,13 +25,15 @@ class FadeAction(Action):
         self.thing.add_event(OverheatedEvent(self.thing, 102))
 
 
-class ExampleDimmableLight:
+class ExampleDimmableLight(Thing):
     """A dimmable light that logs received commands to stdout."""
 
     def __init__(self):
-        self.thing = Thing('My Lamp', 'dimmableLight', 'A web connected lamp')
+        super(ExampleDimmableLight, self).__init__('My Lamp',
+                                                   'dimmableLight',
+                                                   'A web connected lamp')
 
-        self.thing.add_available_action(
+        self.add_available_action(
             'fade',
             {'description': 'Fade the lamp to a given level',
              'input': {
@@ -54,18 +56,18 @@ class ExampleDimmableLight:
              }},
             FadeAction)
 
-        self.thing.add_available_event(
+        self.add_available_event(
             'overheated',
             {'description':
              'The lamp has exceeded its safe operating temperature',
              'type': 'number',
              'unit': 'celsius'})
 
-        self.thing.add_property(self.get_on_property())
-        self.thing.add_property(self.get_level_property())
+        self.add_property(self.get_on_property())
+        self.add_property(self.get_level_property())
 
     def get_on_property(self):
-        return Property(self.thing,
+        return Property(self,
                         'on',
                         Value(True, lambda v: print('On-State is now', v)),
                         metadata={
@@ -74,7 +76,7 @@ class ExampleDimmableLight:
                         })
 
     def get_level_property(self):
-        return Property(self.thing,
+        return Property(self,
                         'level',
                         Value(50, lambda l: print('New light level is', l)),
                         metadata={
@@ -84,20 +86,17 @@ class ExampleDimmableLight:
                             'maximum': 100,
                         })
 
-    def get_thing(self):
-        return self.thing
 
-
-class FakeGpioHumiditySensor:
+class FakeGpioHumiditySensor(Thing):
     """A humidity sensor which updates its measurement every few seconds."""
 
     def __init__(self):
-        self.thing = Thing('My Humidity Sensor',
-                           'multiLevelSensor',
-                           'A web connected humidity sensor')
+        super(FakeGpioHumiditySensor, self).__init__('My Humidity Sensor',
+                                                     'multiLevelSensor',
+                                                     'A web connected humidity sensor')
 
-        self.thing.add_property(
-            Property(self.thing,
+        self.add_property(
+            Property(self,
                      'on',
                      Value(True),
                      metadata={
@@ -106,8 +105,8 @@ class FakeGpioHumiditySensor:
                      }))
 
         self.level = Value(0.0)
-        self.thing.add_property(
-            Property(self.thing,
+        self.add_property(
+            Property(self,
                      'level',
                      self.level,
                      metadata={
@@ -115,6 +114,8 @@ class FakeGpioHumiditySensor:
                          'description': 'The current humidity in %',
                          'unit': '%',
                      }))
+        logging.debug('staring the sensor update looping task')
+        self.sensor_update_task = get_event_loop().create_task(self.update_level())
 
     async def update_level(self):
         try:
@@ -124,17 +125,18 @@ class FakeGpioHumiditySensor:
                 logging.debug('setting new humidity level: %s', new_level)
                 self.level.notify_of_external_update(new_level)
         except CancelledError:
-            # we have no clean up to do on cancelation so we can just halt
+            # we have no cleanup to do on cancelation so we can just halt
             # the propagation of the cancelation exception and let the method end.
             pass
+
+    def cancel_update_level_task(self):
+        self.sensor_update_task.cancel()
+        get_event_loop().run_until_complete(self.sensor_update_task)
 
     @staticmethod
     def read_from_gpio():
         """Mimic an actual sensor updating its reading every couple seconds."""
         return 70.0 * random.random() * (-0.5 + random.random())
-
-    def get_thing(self):
-        return self.thing
 
 
 def run_server():
@@ -147,19 +149,15 @@ def run_server():
     # If adding more than one thing here, be sure to set the `name`
     # parameter to some string, which will be broadcast via mDNS.
     # In the single thing case, the thing's name will be broadcast.
-    server = WebThingServer([light.get_thing(), sensor.get_thing()],
+    server = WebThingServer([light, sensor],
                             name='LightAndTempDevice',
                             port=8888)
     try:
-        logging.debug('staring the sensor update looping task')
-        event_loop = get_event_loop()
-        sensor_update_task = event_loop.create_task(sensor.update_level())
         logging.info('starting the server')
         server.start()
     except KeyboardInterrupt:
         logging.debug('canceling the sensor update looping task')
-        sensor_update_task.cancel()
-        event_loop.run_until_complete(sensor_update_task)
+        sensor.cancel_update_level_task()
         logging.info('stopping the server')
         server.stop()
         logging.info('done')
