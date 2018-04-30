@@ -1,8 +1,9 @@
 import random
-import threading
 import time
-import tornado.ioloop
 import uuid
+import logging
+
+from asyncio import sleep, CancelledError, get_event_loop
 
 from webthing import Action, Event, Property, Thing, Value, WebThingServer
 
@@ -115,18 +116,17 @@ class FakeGpioHumiditySensor:
                          'unit': '%',
                      }))
 
-        self.ioloop = tornado.ioloop.IOLoop.current()
-        t = threading.Thread(target=self.update_level)
-        t.daemon = True
-        t.start()
-
-    def update_level(self):
-        while True:
-            time.sleep(3)
-
-            # Update the underlying value, which in turn notifies all listeners
-            self.ioloop.add_callback(self.level.notify_of_external_update,
-                                     self.read_from_gpio())
+    async def update_level(self):
+        try:
+            while True:
+                await sleep(3)
+                new_level = self.read_from_gpio()
+                logging.debug('setting new humidity level: %s', new_level)
+                self.level.notify_of_external_update(new_level)
+        except CancelledError:
+            # we have no clean up to do on cancelation so we can just halt
+            # the propagation of the cancelation exception and let the method end.
+            pass
 
     @staticmethod
     def read_from_gpio():
@@ -139,22 +139,35 @@ class FakeGpioHumiditySensor:
 
 def run_server():
     # Create a thing that represents a dimmable light
-    light = ExampleDimmableLight().get_thing()
+    light = ExampleDimmableLight()
 
     # Create a thing that represents a humidity sensor
-    sensor = FakeGpioHumiditySensor().get_thing()
+    sensor = FakeGpioHumiditySensor()
 
     # If adding more than one thing here, be sure to set the `name`
     # parameter to some string, which will be broadcast via mDNS.
     # In the single thing case, the thing's name will be broadcast.
-    server = WebThingServer([light, sensor],
+    server = WebThingServer([light.get_thing(), sensor.get_thing()],
                             name='LightAndTempDevice',
                             port=8888)
     try:
+        logging.debug('staring the sensor update looping task')
+        event_loop = get_event_loop()
+        sensor_update_task = event_loop.create_task(sensor.update_level())
+        logging.info('starting the server')
         server.start()
     except KeyboardInterrupt:
+        logging.debug('canceling the sensor update looping task')
+        sensor_update_task.cancel()
+        event_loop.run_until_complete(sensor_update_task)
+        logging.info('stopping the server')
         server.stop()
+        logging.info('done')
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=10,
+        format="%(asctime)s %(filename)s:%(lineno)s %(levelname)s %(message)s"
+    )
     run_server()
