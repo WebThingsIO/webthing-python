@@ -101,7 +101,7 @@ class FakeGpioHumiditySensor:
                      Value(True),
                      metadata={
                          'type': 'boolean',
-                        'description': 'Whether the sensor is on',
+                         'description': 'Whether the sensor is on',
                      }))
 
         self.level = Value(0.0)

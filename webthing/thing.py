@@ -30,43 +30,6 @@ class Thing:
         self.ws_href = None
         self.ui_href = None
 
-    def set_href_prefix(self, prefix):
-        """
-        Set the prefix of any hrefs associated with this thing.
-
-        prefix -- the prefix
-        """
-        self.href_prefix = prefix
-
-        for action in self.available_actions.values():
-            action['metadata']['href'] = prefix + action['metadata']['href']
-
-        for event in self.available_events.values():
-            event['metadata']['href'] = prefix + event['metadata']['href']
-
-        for property_ in self.properties.values():
-            property_.set_href_prefix(prefix)
-
-        for action_name in self.actions.keys():
-            for action in self.actions[action_name]:
-                action.set_href_prefix(prefix)
-
-    def set_ws_href(self, href):
-        """
-        Set the href of this thing's websocket.
-
-        href -- the href
-        """
-        self.ws_href = href
-
-    def set_ui_href(self, href):
-        """
-        Set the href of this thing's custom UI.
-
-        href -- the href
-        """
-        self.ui_href = href
-
     def as_thing_description(self):
         """
         Return the thing state as a Thing Description.
@@ -119,6 +82,43 @@ class Thing:
             thing['description'] = self.description
 
         return thing
+
+    def set_href_prefix(self, prefix):
+        """
+        Set the prefix of any hrefs associated with this thing.
+
+        prefix -- the prefix
+        """
+        self.href_prefix = prefix
+
+        for action in self.available_actions.values():
+            action['metadata']['href'] = prefix + action['metadata']['href']
+
+        for event in self.available_events.values():
+            event['metadata']['href'] = prefix + event['metadata']['href']
+
+        for property_ in self.properties.values():
+            property_.set_href_prefix(prefix)
+
+        for action_name in self.actions.keys():
+            for action in self.actions[action_name]:
+                action.set_href_prefix(prefix)
+
+    def set_ws_href(self, href):
+        """
+        Set the href of this thing's websocket.
+
+        href -- the href
+        """
+        self.ws_href = href
+
+    def set_ui_href(self, href):
+        """
+        Set the href of this thing's custom UI.
+
+        href -- the href
+        """
+        self.ui_href = href
 
     def get_name(self):
         """

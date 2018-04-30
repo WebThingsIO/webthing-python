@@ -27,14 +27,6 @@ class Property:
         # change.
         self.value.on('update', lambda _: self.thing.property_notify(self))
 
-    def set_href_prefix(self, prefix):
-        """
-        Set the prefix of any hrefs associated with this property.
-
-        prefix -- the prefix
-        """
-        self.href_prefix = prefix
-
     def as_property_description(self):
         """
         Get the property description.
@@ -44,6 +36,22 @@ class Property:
         description = copy(self.metadata)
         description['href'] = self.href_prefix + self.href
         return description
+
+    def set_href_prefix(self, prefix):
+        """
+        Set the prefix of any hrefs associated with this property.
+
+        prefix -- the prefix
+        """
+        self.href_prefix = prefix
+
+    def get_href(self):
+        """
+        Get the href of this property.
+
+        Returns the href.
+        """
+        return self.href_prefix + self.href
 
     def get_value(self):
         """
@@ -72,3 +80,7 @@ class Property:
     def get_thing(self):
         """Get the thing associated with this property."""
         return self.thing
+
+    def get_metadata(self):
+        """Get the metadata associated with this property."""
+        return self.metadata

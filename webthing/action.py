@@ -25,14 +25,6 @@ class Action:
         self.time_requested = timestamp()
         self.time_completed = None
 
-    def set_href_prefix(self, prefix):
-        """
-        Set the prefix of any hrefs associated with this action.
-
-        prefix -- the prefix
-        """
-        self.href_prefix = prefix
-
     def as_action_description(self):
         """
         Get the action description.
@@ -54,6 +46,14 @@ class Action:
             description[self.name]['timeCompleted'] = self.time_completed
 
         return description
+
+    def set_href_prefix(self, prefix):
+        """
+        Set the prefix of any hrefs associated with this action.
+
+        prefix -- the prefix
+        """
+        self.href_prefix = prefix
 
     def get_id(self):
         """Get this action's ID."""
