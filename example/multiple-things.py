@@ -1,10 +1,9 @@
-import random
-import threading
-import time
-import tornado.ioloop
-import uuid
-
+from asyncio import sleep, CancelledError, get_event_loop
 from webthing import Action, Event, Property, Thing, Value, WebThingServer
+import logging
+import random
+import time
+import uuid
 
 
 class OverheatedEvent(Event):
@@ -24,13 +23,16 @@ class FadeAction(Action):
         self.thing.add_event(OverheatedEvent(self.thing, 102))
 
 
-class ExampleDimmableLight:
+class ExampleDimmableLight(Thing):
     """A dimmable light that logs received commands to stdout."""
 
     def __init__(self):
-        self.thing = Thing('My Lamp', 'dimmableLight', 'A web connected lamp')
+        Thing.__init__(self,
+                       'My Lamp',
+                       'dimmableLight',
+                       'A web connected lamp')
 
-        self.thing.add_available_action(
+        self.add_available_action(
             'fade',
             {'description': 'Fade the lamp to a given level',
              'input': {
@@ -53,18 +55,18 @@ class ExampleDimmableLight:
              }},
             FadeAction)
 
-        self.thing.add_available_event(
+        self.add_available_event(
             'overheated',
             {'description':
              'The lamp has exceeded its safe operating temperature',
              'type': 'number',
              'unit': 'celsius'})
 
-        self.thing.add_property(self.get_on_property())
-        self.thing.add_property(self.get_level_property())
+        self.add_property(self.get_on_property())
+        self.add_property(self.get_level_property())
 
     def get_on_property(self):
-        return Property(self.thing,
+        return Property(self,
                         'on',
                         Value(True, lambda v: print('On-State is now', v)),
                         metadata={
@@ -73,7 +75,7 @@ class ExampleDimmableLight:
                         })
 
     def get_level_property(self):
-        return Property(self.thing,
+        return Property(self,
                         'level',
                         Value(50, lambda l: print('New light level is', l)),
                         metadata={
@@ -83,20 +85,18 @@ class ExampleDimmableLight:
                             'maximum': 100,
                         })
 
-    def get_thing(self):
-        return self.thing
 
-
-class FakeGpioHumiditySensor:
+class FakeGpioHumiditySensor(Thing):
     """A humidity sensor which updates its measurement every few seconds."""
 
     def __init__(self):
-        self.thing = Thing('My Humidity Sensor',
-                           'multiLevelSensor',
-                           'A web connected humidity sensor')
+        Thing.__init__(self,
+                       'My Humidity Sensor',
+                       'multiLevelSensor',
+                       'A web connected humidity sensor')
 
-        self.thing.add_property(
-            Property(self.thing,
+        self.add_property(
+            Property(self,
                      'on',
                      Value(True),
                      metadata={
@@ -105,8 +105,8 @@ class FakeGpioHumiditySensor:
                      }))
 
         self.level = Value(0.0)
-        self.thing.add_property(
-            Property(self.thing,
+        self.add_property(
+            Property(self,
                      'level',
                      self.level,
                      metadata={
@@ -115,34 +115,38 @@ class FakeGpioHumiditySensor:
                          'unit': '%',
                      }))
 
-        self.ioloop = tornado.ioloop.IOLoop.current()
-        t = threading.Thread(target=self.update_level)
-        t.daemon = True
-        t.start()
+        logging.debug('starting the sensor update looping task')
+        self.sensor_update_task = \
+            get_event_loop().create_task(self.update_level())
 
-    def update_level(self):
-        while True:
-            time.sleep(3)
+    async def update_level(self):
+        try:
+            while True:
+                await sleep(3)
+                new_level = self.read_from_gpio()
+                logging.debug('setting new humidity level: %s', new_level)
+                self.level.notify_of_external_update(new_level)
+        except CancelledError:
+            # We have no cleanup to do on cancellation so we can just halt the
+            # propagation of the cancellation exception and let the method end.
+            pass
 
-            # Update the underlying value, which in turn notifies all listeners
-            self.ioloop.add_callback(self.level.notify_of_external_update,
-                                     self.read_from_gpio())
+    def cancel_update_level_task(self):
+        self.sensor_update_task.cancel()
+        get_event_loop().run_until_complete(self.sensor_update_task)
 
     @staticmethod
     def read_from_gpio():
         """Mimic an actual sensor updating its reading every couple seconds."""
         return 70.0 * random.random() * (-0.5 + random.random())
 
-    def get_thing(self):
-        return self.thing
-
 
 def run_server():
     # Create a thing that represents a dimmable light
-    light = ExampleDimmableLight().get_thing()
+    light = ExampleDimmableLight()
 
     # Create a thing that represents a humidity sensor
-    sensor = FakeGpioHumiditySensor().get_thing()
+    sensor = FakeGpioHumiditySensor()
 
     # If adding more than one thing here, be sure to set the `name`
     # parameter to some string, which will be broadcast via mDNS.
@@ -151,10 +155,19 @@ def run_server():
                             name='LightAndTempDevice',
                             port=8888)
     try:
+        logging.info('starting the server')
         server.start()
     except KeyboardInterrupt:
+        logging.debug('canceling the sensor update looping task')
+        sensor.cancel_update_level_task()
+        logging.info('stopping the server')
         server.stop()
+        logging.info('done')
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=10,
+        format="%(asctime)s %(filename)s:%(lineno)s %(levelname)s %(message)s"
+    )
     run_server()
