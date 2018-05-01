@@ -1,7 +1,7 @@
+from webthing import Action, Event, Property, Thing, Value, WebThingServer
+import logging
 import time
 import uuid
-
-from webthing import Action, Event, Property, Thing, Value, WebThingServer
 
 
 class OverheatedEvent(Event):
@@ -22,7 +22,7 @@ class FadeAction(Action):
 
 
 def make_thing():
-    thing = Thing(name='My Lamp', description='A web connected lamp')
+    thing = Thing('My Lamp', 'dimmableLight', 'A web connected lamp')
 
     def noop(_):
         pass
@@ -86,10 +86,17 @@ def run_server():
     # In the single thing case, the thing's name will be broadcast.
     server = WebThingServer([thing], port=8888)
     try:
+        logging.info('starting the server')
         server.start()
     except KeyboardInterrupt:
+        logging.info('stopping the server')
         server.stop()
+        logging.info('done')
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=10,
+        format="%(asctime)s %(filename)s:%(lineno)s %(levelname)s %(message)s"
+    )
     run_server()

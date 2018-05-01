@@ -138,18 +138,17 @@ Now we have a sensor that constantly reports 0%. To make it usable, we need a th
 
 .. code:: python
 
-  ioloop = tornado.ioloop.IOLoop.current()
+  self.sensor_update_task = \
+      get_event_loop().create_task(self.update_level())
 
-  def update_level():
-      while True:
-          time.sleep(3)
+  async def update_level(self):
+      try:
+          while True:
+              await sleep(3)
+              new_level = self.read_from_gpio()
+              logging.debug('setting new humidity level: %s', new_level)
+              self.level.notify_of_external_update(new_level)
+      except CancelledError:
+          pass
 
-          # Update the underlying value, which in turn notifies all listeners
-          ioloop.add_callback(level.notify_of_external_update,
-                              read_from_gpio())
-
-  t = threading.Thread(target=update_level)
-  t.daemon = True
-  t.start()
-
-This will update our ``Value`` object with the sensor readings via the ``level.notify_of_external_update(read_from_gpio())`` call. The ``Value`` object now notifies the property and the thing that the value has changed, which in turn notifies all websocket listeners.
+This will update our ``Value`` object with the sensor readings via the ``self.level.notify_of_external_update(read_from_gpio())`` call. The ``Value`` object now notifies the property and the thing that the value has changed, which in turn notifies all websocket listeners.

@@ -1,11 +1,9 @@
+from asyncio import sleep, CancelledError, get_event_loop
+from webthing import Action, Event, Property, Thing, Value, WebThingServer
+import logging
 import random
 import time
 import uuid
-import logging
-
-from asyncio import sleep, CancelledError, get_event_loop
-
-from webthing import Action, Event, Property, Thing, Value, WebThingServer
 
 
 class OverheatedEvent(Event):
@@ -29,9 +27,10 @@ class ExampleDimmableLight(Thing):
     """A dimmable light that logs received commands to stdout."""
 
     def __init__(self):
-        super(ExampleDimmableLight, self).__init__('My Lamp',
-                                                   'dimmableLight',
-                                                   'A web connected lamp')
+        Thing.__init__(self,
+                       'My Lamp',
+                       'dimmableLight',
+                       'A web connected lamp')
 
         self.add_available_action(
             'fade',
@@ -91,9 +90,10 @@ class FakeGpioHumiditySensor(Thing):
     """A humidity sensor which updates its measurement every few seconds."""
 
     def __init__(self):
-        super(FakeGpioHumiditySensor, self).__init__('My Humidity Sensor',
-                                                     'multiLevelSensor',
-                                                     'A web connected humidity sensor')
+        Thing.__init__(self,
+                       'My Humidity Sensor',
+                       'multiLevelSensor',
+                       'A web connected humidity sensor')
 
         self.add_property(
             Property(self,
@@ -114,8 +114,10 @@ class FakeGpioHumiditySensor(Thing):
                          'description': 'The current humidity in %',
                          'unit': '%',
                      }))
-        logging.debug('staring the sensor update looping task')
-        self.sensor_update_task = get_event_loop().create_task(self.update_level())
+
+        logging.debug('starting the sensor update looping task')
+        self.sensor_update_task = \
+            get_event_loop().create_task(self.update_level())
 
     async def update_level(self):
         try:
@@ -125,8 +127,8 @@ class FakeGpioHumiditySensor(Thing):
                 logging.debug('setting new humidity level: %s', new_level)
                 self.level.notify_of_external_update(new_level)
         except CancelledError:
-            # we have no cleanup to do on cancelation so we can just halt
-            # the propagation of the cancelation exception and let the method end.
+            # We have no cleanup to do on cancellation so we can just halt the
+            # propagation of the cancellation exception and let the method end.
             pass
 
     def cancel_update_level_task(self):

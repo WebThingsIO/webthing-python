@@ -55,7 +55,7 @@ def run_client():
     code, body = http_request('GET', '/')
     assert code == 200
     assert body['name'] == 'My Lamp'
-    assert body['type'] == 'thing'
+    assert body['type'] == 'dimmableLight'
     assert body['description'] == 'A web connected lamp'
     assert body['properties']['on']['type'] == 'boolean'
     assert body['properties']['on']['description'] == 'Whether the lamp is turned on'
