@@ -393,14 +393,16 @@ class Thing:
 
         property_ -- the property that changed
         """
+        message = json.dumps({
+            'messageType': 'propertyStatus',
+            'data': {
+                property_.name: property_.get_value(),
+            }
+        })
+
         for subscriber in self.subscribers:
             try:
-                subscriber.write_message(json.dumps({
-                    'messageType': 'propertyStatus',
-                    'data': {
-                        property_.name: property_.get_value(),
-                    }
-                }))
+                subscriber.write_message(message)
             except tornado.websocket.WebSocketClosedError:
                 pass
 
@@ -410,12 +412,14 @@ class Thing:
 
         action -- the action whose status changed
         """
+        message = json.dumps({
+            'messageType': 'actionStatus',
+            'data': action.as_action_description(),
+        })
+
         for subscriber in self.subscribers:
             try:
-                subscriber.write_message(json.dumps({
-                    'messageType': 'actionStatus',
-                    'data': action.as_action_description(),
-                }))
+                subscriber.write_message(message)
             except tornado.websocket.WebSocketClosedError:
                 pass
 
@@ -428,11 +432,13 @@ class Thing:
         if event.name not in self.available_events:
             return
 
+        message = json.dumps({
+            'messageType': 'event',
+            'data': event.as_event_description(),
+        })
+
         for subscriber in self.available_events[event.name]['subscribers']:
             try:
-                subscriber.write_message(json.dumps({
-                    'messageType': 'event',
-                    'data': event.as_event_description(),
-                }))
+                subscriber.write_message(message)
             except tornado.websocket.WebSocketClosedError:
                 pass

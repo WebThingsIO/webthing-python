@@ -12,7 +12,7 @@ from webthing.utils import get_ip
 _TIME_REGEX = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$'
 _PROTO = 'http'
 _BASE_URL = '{}:8888'.format(get_ip())
-_PATH_PREFIX = ''
+_PATH_PREFIX = '/0'
 _AUTHORIZATION_HEADER = None
 
 
