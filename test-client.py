@@ -12,12 +12,13 @@ from webthing.utils import get_ip
 _TIME_REGEX = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$'
 _PROTO = 'http'
 _BASE_URL = '{}:8888'.format(get_ip())
-_PATH_PREFIX = '/0'
+_PATH_PREFIX = ''
 _AUTHORIZATION_HEADER = None
 
 
 def http_request(method, path, data=None):
     url = _PROTO + '://' + _BASE_URL + _PATH_PREFIX + path
+    url = url.rstrip('/')
 
     client = tornado.httpclient.HTTPClient()
     headers = {
