@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
+# run flake8 and pydocstyle
+pip install flake8 pydocstyle
+flake8 webthing
+pydocstyle webthing
+
 # clone the webthing-tester
 git clone https://github.com/mozilla-iot/webthing-tester
 pip install -r webthing-tester/requirements.txt
