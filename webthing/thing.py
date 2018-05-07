@@ -83,6 +83,21 @@ class Thing:
 
         return thing
 
+    def get_href(self):
+        """Get this thing's href."""
+        if self.href_prefix:
+            return self.href_prefix
+
+        return '/'
+
+    def get_ws_href(self):
+        """Get the websocket href."""
+        return self.ws_href
+
+    def get_ui_href(self):
+        """Get the UI href."""
+        return self.ui_href
+
     def set_href_prefix(self, prefix):
         """
         Set the prefix of any hrefs associated with this thing.
