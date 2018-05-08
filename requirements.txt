@@ -1,4 +1,4 @@
-eventemitter
-jsonschema
-tornado
-zeroconf
+eventemitter>=0.2.0
+jsonschema>=2.6.0
+tornado>=5.0.0
+zeroconf>=0.20.0
