@@ -110,6 +110,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
         self.thing = self.get_thing(thing_id)
         if self.thing is None:
             self.set_status(404)
+            self.finish()
             return
 
         if self.request.headers.get('Upgrade', '').lower() == 'websocket':
