@@ -15,7 +15,7 @@ requirements = ['jsonschema', 'pyee', 'tornado', 'zeroconf']
 
 setup(
     name='webthing',
-    version='0.5.3',
+    version='0.5.4',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',
