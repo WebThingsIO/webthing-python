@@ -1,5 +1,6 @@
 from asyncio import sleep, CancelledError, get_event_loop
-from webthing import Action, Event, Property, Thing, Value, WebThingServer
+from webthing import (Action, Event, MultipleThings, Property, Thing, Value,
+                      WebThingServer)
 import logging
 import random
 import time
@@ -148,11 +149,10 @@ def run_server():
     # Create a thing that represents a humidity sensor
     sensor = FakeGpioHumiditySensor()
 
-    # If adding more than one thing here, be sure to set the `name`
-    # parameter to some string, which will be broadcast via mDNS.
+    # If adding more than one thing, use MultipleThings() with a name.
     # In the single thing case, the thing's name will be broadcast.
-    server = WebThingServer([light, sensor],
-                            name='LightAndTempDevice',
+    server = WebThingServer(MultipleThings([light, sensor],
+                                           'LightAndTempDevice'),
                             port=8888)
     try:
         logging.info('starting the server')

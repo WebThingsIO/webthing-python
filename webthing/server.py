@@ -19,6 +19,68 @@ def perform_action(action):
     action.start()
 
 
+class SingleThing:
+    """A container for a single thing."""
+
+    def __init__(self, thing):
+        """
+        Initialize the container.
+
+        thing -- the thing to store
+        """
+        self.thing = thing
+
+    def get_thing(self, _):
+        """Get the thing at the given index."""
+        return self.thing
+
+    def get_things(self):
+        """Get the list of things."""
+        return [self.thing]
+
+    def get_name(self):
+        """Get the mDNS server name."""
+        return self.thing.name
+
+
+class MultipleThings:
+    """A container for multiple things."""
+
+    def __init__(self, things, name):
+        """
+        Initialize the container.
+
+        things -- the things to store
+        name -- the mDNS server name
+        """
+        self.things = things
+        self.name = name
+
+    def get_thing(self, idx):
+        """
+        Get the thing at the given index.
+
+        idx -- the index
+        """
+        try:
+            idx = int(idx)
+        except ValueError:
+            return None
+
+        if idx < 0 or idx >= len(self.things):
+            return None
+
+        return self.things[idx]
+
+    def get_things(self):
+        """Get the list of things."""
+        return self.things
+
+    def get_name(self):
+        """Get the mDNS server name."""
+        return self.name
+
+
 class BaseHandler(tornado.web.RequestHandler):
     """Base handler that is initialized with a thing."""
 
@@ -38,18 +100,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
         Returns the thing, or None if not found.
         """
-        if len(self.things) > 1:
-            try:
-                thing_id = int(thing_id)
-            except ValueError:
-                return None
-
-            if thing_id >= len(self.things):
-                return None
-
-            return self.things[thing_id]
-        else:
-            return self.things[0]
+        return self.things.get_thing(thing_id)
 
 
 class ThingsHandler(BaseHandler):
@@ -64,7 +115,7 @@ class ThingsHandler(BaseHandler):
         self.set_header('Content-Type', 'application/json')
         self.write(json.dumps([
             thing.as_thing_description()
-            for idx, thing in enumerate(self.things)
+            for idx, thing in enumerate(self.things.get_things())
         ]))
 
 
@@ -87,18 +138,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
 
         Returns the thing, or None if not found.
         """
-        if len(self.things) > 1:
-            try:
-                thing_id = int(thing_id)
-            except ValueError:
-                return None
-
-            if thing_id >= len(self.things):
-                return None
-
-            return self.things[thing_id]
-        else:
-            return self.things[0]
+        return self.things.get_thing(thing_id)
 
     @tornado.web.asynchronous
     def get(self, thing_id='0'):
@@ -231,9 +271,10 @@ class PropertiesHandler(BaseHandler):
 
         thing_id -- ID of the thing this request is for
         """
-        thing_id = int(thing_id)
-        if thing_id >= len(self.things):
+        self.thing = self.get_thing(thing_id)
+        if self.thing is None:
             self.set_status(404)
+            self.finish()
             return
 
         pass
@@ -474,28 +515,22 @@ class EventHandler(BaseHandler):
 class WebThingServer:
     """Server to represent a Web Thing over HTTP."""
 
-    def __init__(self, things, name=None, port=80, ssl_options=None):
+    def __init__(self, things, port=80, ssl_options=None):
         """
         Initialize the WebThingServer.
 
-        things -- list of Things managed by this server
-        name -- name of this device -- this is only needed if the server is
-                managing multiple things
+        things -- things managed by this server -- should be of type
+                  SingleThing or MultipleThings
         port -- port to listen on (defaults to 80)
         ssl_options -- dict of SSL options to pass to the tornado server
         """
-        if type(things) is not list:
-            things = [things]
-
         self.things = things
+        self.name = things.get_name()
         self.port = port
         self.ip = get_ip()
 
-        if len(self.things) > 1 and not name:
-            raise Exception('name must be set when managing multiple things')
-
-        if len(self.things) > 1:
-            for idx, thing in enumerate(self.things):
+        if isinstance(self.things, MultipleThings):
+            for idx, thing in enumerate(self.things.get_things()):
                 thing.set_href_prefix('/{}'.format(idx))
                 thing.set_ws_href('{}://{}:{}/{}'.format(
                     'wss' if ssl_options is not None else 'ws',
@@ -503,7 +538,6 @@ class WebThingServer:
                     self.port,
                     idx))
 
-            self.name = name
             handlers = [
                 (
                     r'/?',
@@ -554,12 +588,11 @@ class WebThingServer:
                 ),
             ]
         else:
-            self.things[0].set_ws_href('{}://{}:{}'.format(
+            self.things.get_thing(0).set_ws_href('{}://{}:{}'.format(
                 'wss' if ssl_options is not None else 'ws',
                 self.ip,
                 self.port))
 
-            self.name = self.things[0].name
             handlers = [
                 (
                     r'/?',
