@@ -1,4 +1,5 @@
-from webthing import Action, Event, Property, Thing, Value, WebThingServer
+from webthing import (Action, Event, Property, SingleThing, Thing, Value,
+                      WebThingServer)
 import logging
 import time
 import uuid
@@ -81,10 +82,9 @@ def make_thing():
 def run_server():
     thing = make_thing()
 
-    # If adding more than one thing here, be sure to set the `name`
-    # parameter to some string, which will be broadcast via mDNS.
+    # If adding more than one thing, use MultipleThings() with a name.
     # In the single thing case, the thing's name will be broadcast.
-    server = WebThingServer([thing], port=8888)
+    server = WebThingServer(SingleThing(thing), port=8888)
     try:
         logging.info('starting the server')
         server.start()

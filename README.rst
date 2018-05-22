@@ -77,10 +77,9 @@ Now we can add our newly created thing to the server and start it:
 
 .. code:: python
 
-  # If adding more than one thing here, be sure to set the second
-  # parameter to some string, which will be broadcast via mDNS.
+  # If adding more than one thing, use MultipleThings() with a name.
   # In the single thing case, the thing's name will be broadcast.
-  server = WebThingServer([light], port=8888)
+  server = WebThingServer(SingleThing(light), port=8888)
 
   try:
       server.start()

@@ -4,6 +4,6 @@
 from .action import Action
 from .event import Event
 from .property import Property
-from .server import WebThingServer
+from .server import MultipleThings, SingleThing, WebThingServer
 from .thing import Thing
 from .value import Value
