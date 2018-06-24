@@ -17,6 +17,9 @@ class Thing:
         type_ -- the thing's type(s)
         description -- description of the thing
         """
+        if not isinstance(type_, list):
+            type_ = [type_]
+
         self.context = 'https://iot.mozilla.org/schemas'
         self.type = type_
         self.name = name
