@@ -18,12 +18,12 @@ class FadeAction(Action):
 
     def perform_action(self):
         time.sleep(self.input['duration'] / 1000)
-        self.thing.set_property('level', self.input['level'])
+        self.thing.set_property('brightness', self.input['brightness'])
         self.thing.add_event(OverheatedEvent(self.thing, 102))
 
 
 def make_thing():
-    thing = Thing('My Lamp', 'dimmableLight', 'A web connected lamp')
+    thing = Thing('My Lamp', ['OnOffSwitch', 'Light'], 'A web connected lamp')
 
     def noop(_):
         pass
@@ -33,48 +33,61 @@ def make_thing():
                  'on',
                  Value(True, noop),
                  metadata={
+                     '@type': 'OnOffProperty',
+                     'label': 'On/Off',
                      'type': 'boolean',
                      'description': 'Whether the lamp is turned on',
                  }))
     thing.add_property(
         Property(thing,
-                 'level',
+                 'brightness',
                  Value(50, noop),
                  metadata={
+                     '@type': 'BrightnessProperty',
+                     'label': 'Brightness',
                      'type': 'number',
                      'description': 'The level of light from 0-100',
                      'minimum': 0,
                      'maximum': 100,
+                     'unit': 'percent',
                  }))
 
     thing.add_available_action(
         'fade',
-        {'description': 'Fade the lamp to a given level',
-         'input': {
-             'type': 'object',
-             'required': [
-                 'level',
-                 'duration',
-             ],
-             'properties': {
-                 'level': {
-                     'type': 'number',
-                     'minimum': 0,
-                     'maximum': 100,
-                 },
-                 'duration': {
-                     'type': 'number',
-                     'unit': 'milliseconds',
-                 },
-             },
-         }},
+        {
+            'label': 'Fade',
+            'description': 'Fade the lamp to a given level',
+            'input': {
+                'type': 'object',
+                'required': [
+                    'brightness',
+                    'duration',
+                ],
+                'properties': {
+                    'brightness': {
+                        'type': 'number',
+                        'minimum': 0,
+                        'maximum': 100,
+                        'unit': 'percent',
+                    },
+                    'duration': {
+                        'type': 'number',
+                        'minimum': 1,
+                        'unit': 'milliseconds',
+                    },
+                },
+            },
+        },
         FadeAction)
 
     thing.add_available_event(
         'overheated',
-        {'description': 'The lamp has exceeded its safe operating temperature',
-         'type': 'number',
-         'unit': 'celsius'})
+        {
+            'description':
+            'The lamp has exceeded its safe operating temperature',
+            'type': 'number',
+            'unit': 'celsius',
+        })
 
     return thing
 

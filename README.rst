@@ -25,13 +25,13 @@ In this example we will set up a dimmable light and a humidity sensor (both usin
 Dimmable Light
 --------------
 
-Imagine you have a dimmable Light that you want to expose via the web of things API. The Light can be turned on/off and the brightness can be set from 0% to 100%. Besides the name, description, and type, a `dimmableLight` is required to expose two properties:
+Imagine you have a dimmable light that you want to expose via the web of things API. The light can be turned on/off and the brightness can be set from 0% to 100%. Besides the name, description, and type, a ``Light`` is required to expose two properties:
 
 * ``on``: the state of the light, whether it is turned on or off
 
   - Setting this property via a ``PUT {"on": true/false}`` call to the REST API toggles the light.
 
-* ``level``: the brightness level of the light from 0-100%
+* ``brightness``: the brightness level of the light from 0-100%
 
   - Setting this property via a PUT call to the REST API sets the brightness level of this light.
 
@@ -39,11 +39,11 @@ First we create a new Thing:
 
 .. code:: python
 
-    light = Thing('My Lamp', 'dimmableLight', 'A web connected lamp')
+    light = Thing('My Lamp', ['OnOffSwitch', 'Light'], 'A web connected lamp')
 
 Now we can add the required properties.
 
-The ``on`` property reports and sets the on/off state of the light. For this, we need to have a ``Value`` Object which holds the actual state and also how to turn the light on/off. For our purposes, we just want to log the new state if the light is switched on/off.
+The ``on`` property reports and sets the on/off state of the light. For this, we need to have a ``Value`` object which holds the actual state and also a method to turn the light on/off. For our purposes, we just want to log the new state if the light is switched on/off.
 
 .. code:: python
 
@@ -53,24 +53,29 @@ The ``on`` property reports and sets the on/off state of the light. For this, we
           'on',
           Value(True, lambda v: print('On-State is now', v)),
           metadata={
+              '@type': 'OnOffProperty', 
+              'label': 'On/Off',
               'type': 'boolean',
               'description': 'Whether the lamp is turned on',
           }))
 
-The ``level`` property reports the brightness level of the light and sets the level. Like before, instead of actually setting the level of a light, we just log the level to std::out.
+The ``brightness`` property reports the brightness level of the light and sets the level. Like before, instead of actually setting the level of a light, we just log the level.
 
 .. code:: python
 
   light.add_property(
       Property(
           light,
-          'level',
-          Value(0.0, lambda l: print('New light level is', l)),
+          'brightness',
+          Value(50, lambda v: print('Brightness is now', v)),
           metadata={
+              '@type': 'BrightnessProperty',
+              'label': 'Brightness',
               'type': 'number',
               'description': 'The level of light from 0-100',
               'minimum': 0,
               'maximum': 100,
+              'unit': 'percent',
           }))
 
 Now we can add our newly created thing to the server and start it:
@@ -93,31 +98,17 @@ Sensor
 
 Let's now also connect a humidity sensor to the server we set up for our light.
 
-A ``multiLevelSensor`` (a sensor that can also return a level instead of just true/false) has two required properties (besides the name, type, and  optional description): ``on`` and ``level``. We want to monitor those properties and get notified if the value changes.
+A ``MultiLevelSensor`` (a sensor that returns a level instead of just on/off) has one required property (besides the name, type, and optional description): ``level``. We want to monitor this property and get notified if the value changes.
 
 First we create a new Thing:
 
 .. code:: python
 
   sensor = Thing('My Humidity Sensor',
-                 'multiLevelSensor',
+                 ['MultiLevelSensor'],
                  'A web connected humidity sensor')
 
-Then we create and add the appropriate properties:
-
-* ``on``: tells us whether the sensor is on (i.e. high), or off (i.e. low)
-
-  .. code:: python
-
-    sensor.add_property(
-        Property(
-            sensor,
-            'on',
-            Value(True),
-            metadata={
-                'type': 'boolean',
-                'description': 'Whether the sensor is on',
-            }))
+Then we create and add the appropriate property:
 
 * ``level``: tells us what the sensor is actually reading
 
@@ -133,9 +124,13 @@ Then we create and add the appropriate properties:
               'level',
               level,
               metadata={
+                  '@type': 'LevelProperty',
+                  'label': 'Humidity',
                   'type': 'number',
                   'description': 'The current humidity in %',
-                  'unit': '%',
+                  'minimum': 0,
+                  'maximum': 100,
+                  'unit': 'percent',
               }))
 
 Now we have a sensor that constantly reports 0%. To make it usable, we need a thread or some kind of input when the sensor has a new reading available. For this purpose we start a thread that queries the physical sensor every few seconds. For our purposes, it just calls a fake method.

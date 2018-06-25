@@ -9,14 +9,18 @@ import tornado.websocket
 class Thing:
     """A Web Thing."""
 
-    def __init__(self, name, type_='thing', description=''):
+    def __init__(self, name, type_=[], description=''):
         """
         Initialize the object.
 
         name -- the thing's name
-        type_ -- the thing's type
+        type_ -- the thing's type(s)
         description -- description of the thing
         """
+        if not isinstance(type_, list):
+            type_ = [type_]
+
+        self.context = 'https://iot.mozilla.org/schemas'
         self.type = type_
         self.name = name
         self.description = description
@@ -39,7 +43,8 @@ class Thing:
         thing = {
             'name': self.name,
             'href': self.href_prefix if self.href_prefix else '/',
-            'type': self.type,
+            '@context': self.context,
+            '@type': self.type,
             'properties': self.get_property_descriptions(),
             'actions': {
                 name: action['metadata']
@@ -143,11 +148,19 @@ class Thing:
         """
         return self.name
 
+    def get_context(self):
+        """
+        Get the type context of the thing.
+
+        Returns the context as a string.
+        """
+        return self.context
+
     def get_type(self):
         """
-        Get the type of the thing.
+        Get the type(s) of the thing.
 
-        Returns the type as a string.
+        Returns the list of types.
         """
         return self.type
 
