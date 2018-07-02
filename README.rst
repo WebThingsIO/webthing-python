@@ -3,6 +3,8 @@ webthing
 
 .. image:: https://travis-ci.org/mozilla-iot/webthing-python.svg?branch=master
     :target: https://travis-ci.org/mozilla-iot/webthing-python
+.. image:: https://img.shields.io/pypi/v/webthing.svg
+    :target: https://pypi.org/project/webthing/
 .. image:: https://img.shields.io/badge/license-MPL--2.0-blue.svg
     :target: https://github.com/mozilla-iot/webthing-python/blob/master/LICENSE.txt
 
