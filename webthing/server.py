@@ -643,16 +643,13 @@ class WebThingServer:
 
     def start(self):
         """Start listening for incoming connections."""
-        url = '{}://{}:{}/'.format('https' if self.app.is_tls else 'http',
-                                   self.ip,
-                                   self.port)
         self.service_info = ServiceInfo(
-            '_webthing._sub._http._tcp.local.',
-            '{}._http._tcp.local.'.format(self.name),
+            '_webthing._tcp.local.',
+            '{}._webthing._tcp.local.'.format(self.name),
             address=socket.inet_aton(self.ip),
             port=self.port,
             properties={
-                'url': url,
+                'path': '/',
             },
             server='{}.local.'.format(socket.gethostname()))
         self.zeroconf = Zeroconf()
