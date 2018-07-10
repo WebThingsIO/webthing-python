@@ -303,17 +303,15 @@ class PropertiesHandler(BaseHandler):
         """
         Handle a GET request.
 
-        TODO: this is not yet defined in the spec
-
         thing_id -- ID of the thing this request is for
         """
-        self.thing = self.get_thing(thing_id)
-        if self.thing is None:
+        thing = self.get_thing(thing_id)
+        if thing is None:
             self.set_status(404)
-            self.finish()
             return
 
-        pass
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(thing.get_properties()))
 
 
 class PropertyHandler(BaseHandler):
@@ -437,8 +435,6 @@ class ActionHandler(BaseHandler):
         """
         Handle a GET request.
 
-        TODO: this is not yet defined in the spec
-
         thing_id -- ID of the thing this request is for
         action_name -- name of the action from the URL path
         """
@@ -447,7 +443,48 @@ class ActionHandler(BaseHandler):
             self.set_status(404)
             return
 
-        self.set_status(200)
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(thing.get_action_descriptions(
+            action_name=action_name)))
+
+    def post(self, thing_id='0', action_name=None):
+        """
+        Handle a POST request.
+
+        thing_id -- ID of the thing this request is for
+        """
+        thing = self.get_thing(thing_id)
+        if thing is None:
+            self.set_status(404)
+            return
+
+        try:
+            message = json.loads(self.request.body.decode())
+        except ValueError:
+            self.set_status(400)
+            return
+
+        response = {}
+        for name, action_params in message.items():
+            if name != action_name:
+                continue
+
+            input_ = None
+            if 'input' in action_params:
+                input_ = action_params['input']
+
+            action = thing.perform_action(name, input_)
+            if action:
+                response.update(action.as_action_description())
+
+                # Start the action
+                tornado.ioloop.IOLoop.current().spawn_callback(
+                    perform_action,
+                    action,
+                )
+
+        self.set_status(201)
+        self.write(json.dumps(response))
 
 
 class ActionIDHandler(BaseHandler):
@@ -535,8 +572,6 @@ class EventHandler(BaseHandler):
         """
         Handle a GET request.
 
-        TODO: this is not yet defined in the spec
-
         thing_id -- ID of the thing this request is for
         event_name -- name of the event from the URL path
         """
@@ -545,7 +580,9 @@ class EventHandler(BaseHandler):
             self.set_status(404)
             return
 
-        self.set_status(200)
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(thing.get_event_descriptions(
+            event_name=event_name)))
 
 
 class WebThingServer:
