@@ -84,13 +84,23 @@ class MultipleThings:
 class BaseHandler(tornado.web.RequestHandler):
     """Base handler that is initialized with a thing."""
 
-    def initialize(self, things):
+    def initialize(self, things, hosts):
         """
         Initialize the handler.
 
         things -- list of Things managed by this server
+        hosts -- list of allowed hostnames
         """
         self.things = things
+        self.hosts = hosts
+
+    def prepare(self):
+        """Validate Host header."""
+        host = self.request.headers.get('Host', None)
+        if host is not None and host in self.hosts:
+            return
+
+        raise tornado.web.HTTPError(403)
 
     def get_thing(self, thing_id):
         """
@@ -130,13 +140,23 @@ class ThingsHandler(BaseHandler):
 class ThingHandler(tornado.websocket.WebSocketHandler):
     """Handle a request to /."""
 
-    def initialize(self, things):
+    def initialize(self, things, hosts):
         """
         Initialize the handler.
 
         things -- list of Things managed by this server
+        hosts -- list of allowed hostnames
         """
         self.things = things
+        self.hosts = hosts
+
+    def prepare(self):
+        """Validate Host header."""
+        host = self.request.headers.get('Host', None)
+        if host is not None and host in self.hosts:
+            return
+
+        raise tornado.web.HTTPError(403)
 
     def set_default_headers(self, *args, **kwargs):
         """Set the default headers for all requests."""
@@ -531,26 +551,46 @@ class EventHandler(BaseHandler):
 class WebThingServer:
     """Server to represent a Web Thing over HTTP."""
 
-    def __init__(self, things, port=80, ssl_options=None):
+    def __init__(self, things, port=80, hostname=None, ssl_options=None):
         """
         Initialize the WebThingServer.
 
         things -- things managed by this server -- should be of type
                   SingleThing or MultipleThings
         port -- port to listen on (defaults to 80)
+        hostname -- Optional host name, i.e. mything.com
         ssl_options -- dict of SSL options to pass to the tornado server
         """
         self.things = things
         self.name = things.get_name()
         self.port = port
+        self.hostname = hostname
         self.ip = get_ip()
+
+        system_hostname = socket.gethostname()
+        self.hosts = [
+            '127.0.0.1',
+            '127.0.0.1:{}'.format(self.port),
+            'localhost',
+            'localhost:{}'.format(self.port),
+            self.ip,
+            '{}:{}'.format(self.ip, self.port),
+            '{}.local'.format(system_hostname),
+            '{}.local:{}'.format(system_hostname, self.port),
+        ]
+
+        if self.hostname is not None:
+            self.hosts.extend([
+                self.hostname,
+                '{}:{}'.format(self.hostname, self.port),
+            ])
 
         if isinstance(self.things, MultipleThings):
             for idx, thing in enumerate(self.things.get_things()):
                 thing.set_href_prefix('/{}'.format(idx))
                 thing.set_ws_href('{}://{}:{}/{}'.format(
                     'wss' if ssl_options is not None else 'ws',
-                    self.ip,
+                    self.hostname if self.hostname is not None else self.ip,
                     self.port,
                     idx))
 
@@ -558,49 +598,49 @@ class WebThingServer:
                 (
                     r'/?',
                     ThingsHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/(?P<thing_id>\d+)/?',
                     ThingHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/(?P<thing_id>\d+)/properties/?',
                     PropertiesHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/(?P<thing_id>\d+)/properties/' +
                     r'(?P<property_name>[^/]+)/?',
                     PropertyHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/(?P<thing_id>\d+)/actions/?',
                     ActionsHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/(?P<thing_id>\d+)/actions/(?P<action_name>[^/]+)/?',
                     ActionHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/(?P<thing_id>\d+)/actions/' +
                     r'(?P<action_name>[^/]+)/(?P<action_id>[^/]+)/?',
                     ActionIDHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/(?P<thing_id>\d+)/events/?',
                     EventsHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/(?P<thing_id>\d+)/events/(?P<event_name>[^/]+)/?',
                     EventHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
             ]
         else:
@@ -613,42 +653,42 @@ class WebThingServer:
                 (
                     r'/?',
                     ThingHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/properties/?',
                     PropertiesHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/properties/(?P<property_name>[^/]+)/?',
                     PropertyHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/actions/?',
                     ActionsHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/actions/(?P<action_name>[^/]+)/?',
                     ActionHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/actions/(?P<action_name>[^/]+)/(?P<action_id>[^/]+)/?',
                     ActionIDHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/events/?',
                     EventsHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
                 (
                     r'/events/(?P<event_name>[^/]+)/?',
                     EventHandler,
-                    dict(things=self.things),
+                    dict(things=self.things, hosts=self.hosts),
                 ),
             ]
 
