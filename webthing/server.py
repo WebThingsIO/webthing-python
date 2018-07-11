@@ -102,6 +102,14 @@ class BaseHandler(tornado.web.RequestHandler):
         """
         return self.things.get_thing(thing_id)
 
+    def set_default_headers(self, *args, **kwargs):
+        """Set the default headers for all requests."""
+        self.set_header('Access-Control-Allow-Origin', '*')
+        self.set_header('Access-Control-Allow-Headers',
+                        'Origin, X-Requested-With, Content-Type, Accept')
+        self.set_header('Access-Control-Allow-Methods',
+                        'GET, HEAD, PUT, POST, DELETE')
+
 
 class ThingsHandler(BaseHandler):
     """Handle a request to / when the server manages multiple things."""
@@ -129,6 +137,14 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
         things -- list of Things managed by this server
         """
         self.things = things
+
+    def set_default_headers(self, *args, **kwargs):
+        """Set the default headers for all requests."""
+        self.set_header('Access-Control-Allow-Origin', '*')
+        self.set_header('Access-Control-Allow-Headers',
+                        'Origin, X-Requested-With, Content-Type, Accept')
+        self.set_header('Access-Control-Allow-Methods',
+                        'GET, HEAD, PUT, POST, DELETE')
 
     def get_thing(self, thing_id):
         """
