@@ -181,26 +181,39 @@ class Thing:
         return {k: v.as_property_description()
                 for k, v in self.properties.items()}
 
-    def get_action_descriptions(self):
+    def get_action_descriptions(self, action_name=None):
         """
         Get the thing's actions as an array.
+
+        action_name -- Optional action name to get descriptions for
 
         Returns the action descriptions.
         """
         descriptions = []
-        for name in self.actions:
-            for action in self.actions[name]:
+
+        if action_name is None:
+            for name in self.actions:
+                for action in self.actions[name]:
+                    descriptions.append(action.as_action_description())
+        elif action_name in self.actions:
+            for action in self.actions[action_name]:
                 descriptions.append(action.as_action_description())
 
         return descriptions
 
-    def get_event_descriptions(self):
+    def get_event_descriptions(self, event_name=None):
         """
         Get the thing's events as an array.
 
+        event_name -- Optional event name to get descriptions for
+
         Returns the event descriptions.
         """
-        return [e.as_event_description() for e in self.events]
+        if event_name is None:
+            return [e.as_event_description() for e in self.events]
+        else:
+            return [e.as_event_description()
+                    for e in self.events if e.get_name() == event_name]
 
     def add_property(self, property_):
         """
@@ -243,6 +256,15 @@ class Thing:
             return prop.get_value()
 
         return None
+
+    def get_properties(self):
+        """
+        Get a mapping of all properties and their values.
+
+        Returns a dictionary of property_name -> value.
+        """
+        return {prop.get_name(): prop.get_value()
+                for prop in self.properties.values()}
 
     def has_property(self, property_name):
         """
