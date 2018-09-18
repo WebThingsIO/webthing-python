@@ -25,14 +25,7 @@ class Value(EventEmitter):
         """
         EventEmitter.__init__(self)
         self.last_value = initial_value
-
-        if value_forwarder is None:
-            def fn(_):
-                raise AttributeError('Read-only value')
-
-            self.value_forwarder = fn
-        else:
-            self.value_forwarder = value_forwarder
+        self.value_forwarder = value_forwarder
 
     def set(self, value):
         """
@@ -40,7 +33,9 @@ class Value(EventEmitter):
 
         value -- value to set
         """
-        self.value_forwarder(value)
+        if self.value_forwarder is not None:
+            self.value_forwarder(value)
+
         self.notify_of_external_update(value)
 
     def get(self):
