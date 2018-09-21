@@ -114,7 +114,7 @@ Then we create and add the appropriate property:
 
 * ``level``: tells us what the sensor is actually reading
 
-  - Contrary to the light, the value cannot be set via an API call, as it wouldn't make much sense, to SET what a sensor is reading. Therefore, we are utilizing a **read-only** Value by omitting the ``value_forwarder`` parameter.
+  - Contrary to the light, the value cannot be set via an API call, as it wouldn't make much sense, to SET what a sensor is reading. Therefore, we are creating a **readOnly** property.
 
     .. code:: python
 
@@ -133,6 +133,7 @@ Then we create and add the appropriate property:
                   'minimum': 0,
                   'maximum': 100,
                   'unit': 'percent',
+                  'readOnly': True,
               }))
 
 Now we have a sensor that constantly reports 0%. To make it usable, we need a thread or some kind of input when the sensor has a new reading available. For this purpose we start a thread that queries the physical sensor every few seconds. For our purposes, it just calls a fake method.

@@ -118,6 +118,7 @@ class FakeGpioHumiditySensor(Thing):
                          'minimum': 0,
                          'maximum': 100,
                          'unit': 'percent',
+                         'readOnly': True,
                      }))
 
         logging.debug('starting the sensor update looping task')

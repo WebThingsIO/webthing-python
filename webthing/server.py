@@ -10,6 +10,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.websocket
 
+from .errors import PropertyError
 from .utils import get_ip
 
 
@@ -242,12 +243,12 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
             for property_name, property_value in message['data'].items():
                 try:
                     self.thing.set_property(property_name, property_value)
-                except AttributeError:
+                except PropertyError as e:
                     self.write_message(json.dumps({
                         'messageType': 'error',
                         'data': {
                             'status': '403 Forbidden',
-                            'message': 'Read-only property',
+                            'message': str(e),
                         },
                     }))
         elif msg_type == 'requestAction':
@@ -362,7 +363,7 @@ class PropertyHandler(BaseHandler):
         if thing.has_property(property_name):
             try:
                 thing.set_property(property_name, args[property_name])
-            except AttributeError:
+            except PropertyError:
                 self.set_status(403)
                 return
 

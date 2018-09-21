@@ -2,6 +2,8 @@
 
 from copy import copy
 
+from .errors import PropertyError
+
 
 class Property:
     """A Property represents an individual state value of a thing."""
@@ -26,6 +28,11 @@ class Property:
         # Add the property change observer to notify the Thing about a property
         # change.
         self.value.on('update', lambda _: self.thing.property_notify(self))
+
+    @property
+    def read_only(self):
+        """Determine whether or not the property is read-only."""
+        return 'readOnly' in self.metadata and self.metadata['readOnly']
 
     def as_property_description(self):
         """
@@ -67,6 +74,9 @@ class Property:
 
         value -- the value to set
         """
+        if self.read_only:
+            raise PropertyError('Read-only property')
+
         self.value.set(value)
 
     def get_name(self):
