@@ -247,7 +247,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
                     self.write_message(json.dumps({
                         'messageType': 'error',
                         'data': {
-                            'status': '403 Forbidden',
+                            'status': '400 Bad Request',
                             'message': str(e),
                         },
                     }))
@@ -364,7 +364,7 @@ class PropertyHandler(BaseHandler):
             try:
                 thing.set_property(property_name, args[property_name])
             except PropertyError:
-                self.set_status(403)
+                self.set_status(400)
                 return
 
             self.set_header('Content-Type', 'application/json')
