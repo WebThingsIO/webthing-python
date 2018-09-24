@@ -15,7 +15,7 @@ requirements = ['jsonschema', 'pyee', 'tornado', 'zeroconf']
 
 setup(
     name='webthing',
-    version='0.8.0',
+    version='0.8.1',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',
@@ -30,6 +30,7 @@ setup(
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     license='MPL-2.0',
     project_urls={
