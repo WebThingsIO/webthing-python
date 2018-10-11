@@ -98,7 +98,7 @@ class BaseHandler(tornado.web.RequestHandler):
     def prepare(self):
         """Validate Host header."""
         host = self.request.headers.get('Host', None)
-        if host is not None and host in self.hosts:
+        if host is not None and host.lower() in self.hosts:
             return
 
         raise tornado.web.HTTPError(403)
@@ -605,7 +605,7 @@ class WebThingServer:
         self.hostname = hostname
         self.ip = get_ip()
 
-        system_hostname = socket.gethostname()
+        system_hostname = socket.gethostname().lower()
         self.hosts = [
             '127.0.0.1',
             '127.0.0.1:{}'.format(self.port),
@@ -618,6 +618,7 @@ class WebThingServer:
         ]
 
         if self.hostname is not None:
+            self.hostname = self.hostname.lower()
             self.hosts.extend([
                 self.hostname,
                 '{}:{}'.format(self.hostname, self.port),
