@@ -11,7 +11,7 @@ import tornado.web
 import tornado.websocket
 
 from .errors import PropertyError
-from .utils import get_ip
+from .utils import get_addresses, get_ip
 
 
 @tornado.gen.coroutine
@@ -132,10 +132,21 @@ class ThingsHandler(BaseHandler):
         property_name -- the name of the property from the URL path
         """
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps([
-            thing.as_thing_description()
-            for idx, thing in enumerate(self.things.get_things())
-        ]))
+        ws_href = '{}://{}'.format(
+            'wss' if self.request.protocol == 'https' else 'ws',
+            self.request.headers.get('Host', '')
+        )
+
+        descriptions = []
+        for thing in self.things.get_things():
+            description = thing.as_thing_description()
+            description['links'].append({
+                'rel': 'alternate',
+                'href': '{}{}'.format(ws_href, thing.get_href()),
+            })
+            descriptions.push(description)
+
+        self.write(json.dumps(descriptions))
 
 
 class ThingHandler(tornado.websocket.WebSocketHandler):
@@ -195,7 +206,18 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
             return
 
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps(self.thing.as_thing_description()))
+        ws_href = '{}://{}'.format(
+            'wss' if self.request.protocol == 'https' else 'ws',
+            self.request.headers.get('Host', '')
+        )
+
+        description = self.thing.as_thing_description()
+        description['links'].append({
+            'rel': 'alternate',
+            'href': '{}{}'.format(ws_href, self.thing.get_href()),
+        })
+
+        self.write(json.dumps(description))
         self.finish()
 
     def open(self):
@@ -603,19 +625,20 @@ class WebThingServer:
         self.name = things.get_name()
         self.port = port
         self.hostname = hostname
-        self.ip = get_ip()
 
         system_hostname = socket.gethostname().lower()
         self.hosts = [
-            '127.0.0.1',
-            '127.0.0.1:{}'.format(self.port),
             'localhost',
             'localhost:{}'.format(self.port),
-            self.ip,
-            '{}:{}'.format(self.ip, self.port),
             '{}.local'.format(system_hostname),
             '{}.local:{}'.format(system_hostname, self.port),
         ]
+
+        for address in get_addresses():
+            self.hosts.extend([
+                address,
+                '{}:{}'.format(address, self.port),
+            ])
 
         if self.hostname is not None:
             self.hostname = self.hostname.lower()
@@ -627,11 +650,6 @@ class WebThingServer:
         if isinstance(self.things, MultipleThings):
             for idx, thing in enumerate(self.things.get_things()):
                 thing.set_href_prefix('/{}'.format(idx))
-                thing.set_ws_href('{}://{}:{}/{}'.format(
-                    'wss' if ssl_options is not None else 'ws',
-                    self.hostname if self.hostname is not None else self.ip,
-                    self.port,
-                    idx))
 
             handlers = [
                 (
@@ -683,11 +701,6 @@ class WebThingServer:
                 ),
             ]
         else:
-            self.things.get_thing(0).set_ws_href('{}://{}:{}'.format(
-                'wss' if ssl_options is not None else 'ws',
-                self.ip,
-                self.port))
-
             handlers = [
                 (
                     r'/?',
@@ -741,7 +754,7 @@ class WebThingServer:
         self.service_info = ServiceInfo(
             '_webthing._tcp.local.',
             '{}._webthing._tcp.local.'.format(self.name),
-            address=socket.inet_aton(self.ip),
+            address=socket.inet_aton(get_ip()),
             port=self.port,
             properties={
                 'path': '/',

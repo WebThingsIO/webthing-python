@@ -1,6 +1,7 @@
 """Utility functions."""
 
 import datetime
+import netifaces
 import socket
 
 
@@ -29,3 +30,30 @@ def get_ip():
         s.close()
 
     return ip
+
+
+def get_addresses():
+    """
+    Get all IP addresses.
+
+    Returns list of addresses.
+    """
+    addresses = set()
+
+    for iface in netifaces.interfaces():
+        for family, addrs in netifaces.ifaddresses(iface).items():
+            if family not in [netifaces.AF_INET, netifaces.AF_INET6]:
+                continue
+
+            # Sometimes, IPv6 addresses will have the interface name appended
+            # as, e.g. %eth0. Handle that.
+            for addr in [a['addr'].split('%')[0].lower() for a in addrs]:
+                # Filter out link-local addresses.
+                if family == netifaces.AF_INET and \
+                        not addr.startswith('169.254.'):
+                    addresses.add(addr)
+                elif family == netifaces.AF_INET6 and \
+                        not addr.startswith('fe80:'):
+                    addresses.add('[{}]'.format(addr))
+
+    return sorted(list(addresses))
