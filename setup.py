@@ -21,7 +21,7 @@ requirements = [
 
 setup(
     name='webthing',
-    version='0.8.1',
+    version='0.9.0',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',
