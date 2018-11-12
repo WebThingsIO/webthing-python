@@ -144,7 +144,7 @@ class ThingsHandler(BaseHandler):
                 'rel': 'alternate',
                 'href': '{}{}'.format(ws_href, thing.get_href()),
             })
-            descriptions.push(description)
+            descriptions.append(description)
 
         self.write(json.dumps(descriptions))
 
