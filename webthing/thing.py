@@ -45,14 +45,8 @@ class Thing:
             '@context': self.context,
             '@type': self.type,
             'properties': self.get_property_descriptions(),
-            'actions': {
-                name: action['metadata']
-                for name, action in self.available_actions.items()
-            },
-            'events': {
-                name: event['metadata']
-                for name, event in self.available_events.items()
-            },
+            'actions': {},
+            'events': {},
             'links': [
                 {
                     'rel': 'properties',
@@ -68,6 +62,24 @@ class Thing:
                 },
             ],
         }
+
+        for name, action in self.available_actions.items():
+            thing['actions'][name] = action['metadata']
+            thing['actions'][name]['links'] = [
+                {
+                    'rel': 'action',
+                    'href': '{}/actions/{}'.format(self.href_prefix, name),
+                },
+            ]
+
+        for name, event in self.available_events.items():
+            thing['events'][name] = event['metadata']
+            thing['events'][name]['links'] = [
+                {
+                    'rel': 'event',
+                    'href': '{}/events/{}'.format(self.href_prefix, name),
+                },
+            ]
 
         if self.ui_href is not None:
             thing['links'].append({
@@ -99,12 +111,6 @@ class Thing:
         prefix -- the prefix
         """
         self.href_prefix = prefix
-
-        for action in self.available_actions.values():
-            action['metadata']['href'] = prefix + action['metadata']['href']
-
-        for event in self.available_events.values():
-            event['metadata']['href'] = prefix + event['metadata']['href']
 
         for property_ in self.properties.values():
             property_.set_href_prefix(prefix)
@@ -308,8 +314,6 @@ class Thing:
         if metadata is None:
             metadata = {}
 
-        metadata['href'] = '/events/{}'.format(name)
-
         self.available_events[name] = {
             'metadata': metadata,
             'subscribers': set(),
@@ -368,8 +372,6 @@ class Thing:
         """
         if metadata is None:
             metadata = {}
-
-        metadata['href'] = '/actions/{}'.format(name)
 
         self.available_actions[name] = {
             'metadata': metadata,
