@@ -1,5 +1,8 @@
 # webthing Changelog
 
-## [Unreleased]
+## [0.10.0] - 2018-11-30
 ### Changed
 - Property, Action, and Event description now use `links` rather than `href`. - [Spec PR](https://github.com/mozilla-iot/wot/pull/119)
+
+[Unreleased]: https://github.com/mozilla-iot/webthing-python/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/mozilla-iot/webthing-python/compare/v0.9.2...v0.10.0
