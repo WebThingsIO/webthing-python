@@ -52,7 +52,12 @@ class Property:
         Returns a dictionary describing the property.
         """
         description = copy(self.metadata)
-        description['href'] = self.href_prefix + self.href
+        description['links'] = [
+            {
+                'rel': 'property',
+                'href': self.href_prefix + self.href,
+            },
+        ]
         return description
 
     def set_href_prefix(self, prefix):
