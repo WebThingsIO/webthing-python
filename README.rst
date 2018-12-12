@@ -56,7 +56,7 @@ The ``on`` property reports and sets the on/off state of the light. For this, we
           Value(True, lambda v: print('On-State is now', v)),
           metadata={
               '@type': 'OnOffProperty', 
-              'label': 'On/Off',
+              'title': 'On/Off',
               'type': 'boolean',
               'description': 'Whether the lamp is turned on',
           }))
@@ -72,7 +72,7 @@ The ``brightness`` property reports the brightness level of the light and sets t
           Value(50, lambda v: print('Brightness is now', v)),
           metadata={
               '@type': 'BrightnessProperty',
-              'label': 'Brightness',
+              'title': 'Brightness',
               'type': 'number',
               'description': 'The level of light from 0-100',
               'minimum': 0,
@@ -127,7 +127,7 @@ Then we create and add the appropriate property:
               level,
               metadata={
                   '@type': 'LevelProperty',
-                  'label': 'Humidity',
+                  'title': 'Humidity',
                   'type': 'number',
                   'description': 'The current humidity in %',
                   'minimum': 0,
