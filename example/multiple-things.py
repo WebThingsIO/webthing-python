@@ -39,7 +39,7 @@ class ExampleDimmableLight(Thing):
                      Value(True, lambda v: print('On-State is now', v)),
                      metadata={
                          '@type': 'OnOffProperty',
-                         'label': 'On/Off',
+                         'title': 'On/Off',
                          'type': 'boolean',
                          'description': 'Whether the lamp is turned on',
                      }))
@@ -50,7 +50,7 @@ class ExampleDimmableLight(Thing):
                      Value(50, lambda v: print('Brightness is now', v)),
                      metadata={
                          '@type': 'BrightnessProperty',
-                         'label': 'Brightness',
+                         'title': 'Brightness',
                          'type': 'integer',
                          'description': 'The level of light from 0-100',
                          'minimum': 0,
@@ -61,7 +61,7 @@ class ExampleDimmableLight(Thing):
         self.add_available_action(
             'fade',
             {
-                'label': 'Fade',
+                'title': 'Fade',
                 'description': 'Fade the lamp to a given level',
                 'input': {
                     'type': 'object',
@@ -112,7 +112,7 @@ class FakeGpioHumiditySensor(Thing):
                      self.level,
                      metadata={
                          '@type': 'LevelProperty',
-                         'label': 'Humidity',
+                         'title': 'Humidity',
                          'type': 'number',
                          'description': 'The current humidity in %',
                          'minimum': 0,
