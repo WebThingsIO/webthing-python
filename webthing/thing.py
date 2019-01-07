@@ -433,7 +433,7 @@ class Thing:
             }
         })
 
-        for subscriber in self.subscribers:
+        for subscriber in list(self.subscribers):
             try:
                 subscriber.write_message(message)
             except tornado.websocket.WebSocketClosedError:
@@ -450,7 +450,7 @@ class Thing:
             'data': action.as_action_description(),
         })
 
-        for subscriber in self.subscribers:
+        for subscriber in list(self.subscribers):
             try:
                 subscriber.write_message(message)
             except tornado.websocket.WebSocketClosedError:
