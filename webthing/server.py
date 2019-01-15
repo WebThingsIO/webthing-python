@@ -611,15 +611,20 @@ class EventHandler(BaseHandler):
 class WebThingServer:
     """Server to represent a Web Thing over HTTP."""
 
-    def __init__(self, things, port=80, hostname=None, ssl_options=None):
+    def __init__(self, things, port=80, hostname=None, ssl_options=None,
+                 additional_routes=None):
         """
         Initialize the WebThingServer.
+
+        For documentation on the additional route format, see:
+        https://www.tornadoweb.org/en/stable/web.html#tornado.web.Application
 
         things -- things managed by this server -- should be of type
                   SingleThing or MultipleThings
         port -- port to listen on (defaults to 80)
         hostname -- Optional host name, i.e. mything.com
         ssl_options -- dict of SSL options to pass to the tornado server
+        additional_routes -- list of additional routes to add to the server
         """
         self.things = things
         self.name = things.get_name()
@@ -743,6 +748,9 @@ class WebThingServer:
                     dict(things=self.things, hosts=self.hosts),
                 ),
             ]
+
+        if isinstance(additional_routes, list):
+            handlers = additional_routes + handlers
 
         self.app = tornado.web.Application(handlers)
         self.app.is_tls = ssl_options is not None
