@@ -19,17 +19,15 @@ Installation
 
   $ pip install webthing
 
-How to start the sample:
-========================
+Running the Sample
+==================
 
 .. code:: shell
 
-  $ cd ~/ && wget https://raw.githubusercontent.com/mozilla-iot/webthing-python/master/example/single-thing.py
+  $ wget https://raw.githubusercontent.com/mozilla-iot/webthing-python/master/example/single-thing.py
   $ python3 single-thing.py
 
-This starts a server and lets you search for it from your gateway through mDNS.
-Go to your gateway webpanel and click on things and then add one with the plus.
-If both are in the same network it will automaticaly apear.
+This starts a server and lets you search for it from your gateway through mDNS. To add it to your gateway, navigate to the Things page in the gateway's UI and click the + icon at the bottom right. If both are on the same network, the example thing will automatically appear.
 
 Example Implementation
 ======================
