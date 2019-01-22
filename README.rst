@@ -19,10 +19,20 @@ Installation
 
   $ pip install webthing
 
-Example
-=======
+Running the Sample
+==================
 
-In this example we will set up a dimmable light and a humidity sensor (both using fake data, of course). Both working examples can be found in `here <https://github.com/mozilla-iot/webthing-python/tree/master/example>`_.
+.. code:: shell
+
+  $ wget https://raw.githubusercontent.com/mozilla-iot/webthing-python/master/example/single-thing.py
+  $ python3 single-thing.py
+
+This starts a server and lets you search for it from your gateway through mDNS. To add it to your gateway, navigate to the Things page in the gateway's UI and click the + icon at the bottom right. If both are on the same network, the example thing will automatically appear.
+
+Example Implementation
+======================
+
+In this code-walkthrough we will set up a dimmable light and a humidity sensor (both using fake data, of course). Both working examples can be found in `here <https://github.com/mozilla-iot/webthing-python/tree/master/example>`_.
 
 Dimmable Light
 --------------
@@ -55,7 +65,7 @@ The ``on`` property reports and sets the on/off state of the light. For this, we
           'on',
           Value(True, lambda v: print('On-State is now', v)),
           metadata={
-              '@type': 'OnOffProperty', 
+              '@type': 'OnOffProperty',
               'title': 'On/Off',
               'type': 'boolean',
               'description': 'Whether the lamp is turned on',
