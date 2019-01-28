@@ -3,6 +3,7 @@
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
+import sys
 
 
 here = path.abspath(path.dirname(__file__))
@@ -16,12 +17,16 @@ requirements = [
     'netifaces',
     'pyee',
     'tornado',
-    'zeroconf',
 ]
+
+if sys.version_info.major == 2:
+    requirements.append('zeroconf==0.19.*')
+else:
+    requirements.append('zeroconf')
 
 setup(
     name='webthing',
-    version='0.11.0',
+    version='0.11.1',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',
@@ -34,6 +39,8 @@ setup(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -43,5 +50,5 @@ setup(
         'Source': 'https://github.com/mozilla-iot/webthing-python',
         'Tracker': 'https://github.com/mozilla-iot/webthing-python/issues',
     },
-    python_requires='>=3.5, <4',
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
 )

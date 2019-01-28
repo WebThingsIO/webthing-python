@@ -1,9 +1,10 @@
-from asyncio import sleep, CancelledError, get_event_loop
+from __future__ import print_function
 from webthing import (Action, Event, MultipleThings, Property, Thing, Value,
                       WebThingServer)
 import logging
 import random
 import time
+import tornado.ioloop
 import uuid
 
 
@@ -122,20 +123,16 @@ class FakeGpioHumiditySensor(Thing):
                      }))
 
         logging.debug('starting the sensor update looping task')
-        self.sensor_update_task = \
-            get_event_loop().create_task(self.update_level())
+        self.timer = tornado.ioloop.PeriodicCallback(
+            self.update_level,
+            3000
+        )
+        self.timer.start()
 
-    async def update_level(self):
-        try:
-            while True:
-                await sleep(3)
-                new_level = self.read_from_gpio()
-                logging.debug('setting new humidity level: %s', new_level)
-                self.level.notify_of_external_update(new_level)
-        except CancelledError:
-            # We have no cleanup to do on cancellation so we can just halt the
-            # propagation of the cancellation exception and let the method end.
-            pass
+    def update_level(self):
+        new_level = self.read_from_gpio()
+        logging.debug('setting new humidity level: %s', new_level)
+        self.level.notify_of_external_update(new_level)
 
     def cancel_update_level_task(self):
         self.sensor_update_task.cancel()
