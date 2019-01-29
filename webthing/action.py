@@ -1,6 +1,6 @@
 """High-level Action base class implementation."""
-
-from .utils import timestamp
+from __future__ import print_function, absolute_import, division
+from webthing.utils import timestamp
 
 
 class Action:

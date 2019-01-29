@@ -4,7 +4,7 @@ from copy import deepcopy
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
-from .errors import PropertyError
+from webthing.errors import PropertyError
 
 
 class Property:

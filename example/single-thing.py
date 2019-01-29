@@ -1,3 +1,4 @@
+from __future__ import division
 from webthing import (Action, Event, Property, SingleThing, Thing, Value,
                       WebThingServer)
 import logging

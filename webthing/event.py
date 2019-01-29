@@ -1,6 +1,6 @@
 """High-level Event base class implementation."""
 
-from .utils import timestamp
+from webthing.utils import timestamp
 
 
 class Event:

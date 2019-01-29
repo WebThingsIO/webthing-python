@@ -10,8 +10,8 @@ import tornado.ioloop
 import tornado.web
 import tornado.websocket
 
-from .errors import PropertyError
-from .utils import get_addresses, get_ip
+from webthing.errors import PropertyError
+from webthing.utils import get_addresses, get_ip
 
 
 @tornado.gen.coroutine
