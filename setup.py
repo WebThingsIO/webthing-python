@@ -13,20 +13,33 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 requirements = [
-    'jsonschema',
-    'netifaces',
-    'pyee',
-    'tornado',
+    'netifaces>=0.10.0',
+    'pyee>=5.0.0',
 ]
 
 if sys.version_info.major == 2:
-    requirements.append('zeroconf==0.19.*')
-else:
-    requirements.append('zeroconf')
+    requirements.extend([
+        'jsonschema==2.6.*',
+        'tornado==5.1.*',
+        'zeroconf==0.19.*',
+    ])
+elif sys.version_info.major == 3:
+    if sys.version_info.minor < 5:
+        requirements.extend([
+            'jsonschema==2.6.*',
+            'tornado==5.1.*',
+            'zeroconf>=0.21.0',
+        ])
+    else:
+        requirements.extend([
+            'jsonschema>=3.0.0',
+            'tornado>=6.0.0',
+            'zeroconf>=0.21.0',
+        ])
 
 setup(
     name='webthing',
-    version='0.11.1',
+    version='0.11.2',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',

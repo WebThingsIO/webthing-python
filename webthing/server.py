@@ -188,7 +188,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
         """
         return self.things.get_thing(thing_id)
 
-    @tornado.web.asynchronous
+    @tornado.gen.coroutine
     def get(self, thing_id='0'):
         """
         Handle a GET request, including websocket requests.
@@ -202,7 +202,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
             return
 
         if self.request.headers.get('Upgrade', '').lower() == 'websocket':
-            tornado.websocket.WebSocketHandler.get(self)
+            yield tornado.websocket.WebSocketHandler.get(self)
             return
 
         self.set_header('Content-Type', 'application/json')
