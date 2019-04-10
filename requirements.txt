@@ -1,6 +1,6 @@
+ifaddr>=0.1.0
 jsonschema==2.6.*; python_version < '3.5'
 jsonschema>=3.0.0; python_version >= '3.5'
-netifaces>=0.10.0
 pyee>=5.0.0
 tornado==5.1.*; python_version < '3.5'
 tornado>=6.0.0; python_version >= '3.5'
