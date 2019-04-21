@@ -135,8 +135,7 @@ class FakeGpioHumiditySensor(Thing):
         self.level.notify_of_external_update(new_level)
 
     def cancel_update_level_task(self):
-        self.sensor_update_task.cancel()
-        get_event_loop().run_until_complete(self.sensor_update_task)
+        self.timer.stop()
 
     @staticmethod
     def read_from_gpio():
