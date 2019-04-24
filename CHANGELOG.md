@@ -1,5 +1,9 @@
 # webthing Changelog
 
+## [Unreleased]
+### Added
+- Ability to set a base URL path on server.
+
 ## [0.11.2] - 2019-03-11
 ### Added
 - Support for Tornado 6.x
