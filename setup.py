@@ -14,7 +14,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 requirements = [
     'ifaddr>=0.1.0',
-    'pyee>=5.0.0',
+    'pyee>=6.0.0',
 ]
 
 if sys.version_info.major == 2:
@@ -39,7 +39,7 @@ elif sys.version_info.major == 3:
 
 setup(
     name='webthing',
-    version='0.11.3',
+    version='0.12.0',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',

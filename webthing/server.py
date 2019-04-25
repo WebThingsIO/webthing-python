@@ -31,7 +31,7 @@ class SingleThing:
         """
         self.thing = thing
 
-    def get_thing(self, _):
+    def get_thing(self, _=None):
         """Get the thing at the given index."""
         return self.thing
 
@@ -612,7 +612,7 @@ class WebThingServer:
     """Server to represent a Web Thing over HTTP."""
 
     def __init__(self, things, port=80, hostname=None, ssl_options=None,
-                 additional_routes=None):
+                 additional_routes=None, base_path=''):
         """
         Initialize the WebThingServer.
 
@@ -625,11 +625,13 @@ class WebThingServer:
         hostname -- Optional host name, i.e. mything.com
         ssl_options -- dict of SSL options to pass to the tornado server
         additional_routes -- list of additional routes to add to the server
+        base_path -- base URL path to use, rather than '/'
         """
         self.things = things
         self.name = things.get_name()
         self.port = port
         self.hostname = hostname
+        self.base_path = base_path.rstrip('/')
 
         system_hostname = socket.gethostname().lower()
         self.hosts = [
@@ -654,103 +656,108 @@ class WebThingServer:
 
         if isinstance(self.things, MultipleThings):
             for idx, thing in enumerate(self.things.get_things()):
-                thing.set_href_prefix('/{}'.format(idx))
+                thing.set_href_prefix('{}/{}'.format(self.base_path, idx))
 
             handlers = [
-                (
+                [
                     r'/?',
                     ThingsHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/(?P<thing_id>\d+)/?',
                     ThingHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/(?P<thing_id>\d+)/properties/?',
                     PropertiesHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/(?P<thing_id>\d+)/properties/' +
                     r'(?P<property_name>[^/]+)/?',
                     PropertyHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/(?P<thing_id>\d+)/actions/?',
                     ActionsHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/(?P<thing_id>\d+)/actions/(?P<action_name>[^/]+)/?',
                     ActionHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/(?P<thing_id>\d+)/actions/' +
                     r'(?P<action_name>[^/]+)/(?P<action_id>[^/]+)/?',
                     ActionIDHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/(?P<thing_id>\d+)/events/?',
                     EventsHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/(?P<thing_id>\d+)/events/(?P<event_name>[^/]+)/?',
                     EventHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
+                ],
             ]
         else:
+            self.things.get_thing().set_href_prefix(self.base_path)
             handlers = [
-                (
+                [
                     r'/?',
                     ThingHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/properties/?',
                     PropertiesHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/properties/(?P<property_name>[^/]+)/?',
                     PropertyHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/actions/?',
                     ActionsHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/actions/(?P<action_name>[^/]+)/?',
                     ActionHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/actions/(?P<action_name>[^/]+)/(?P<action_id>[^/]+)/?',
                     ActionIDHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/events/?',
                     EventsHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
-                (
+                ],
+                [
                     r'/events/(?P<event_name>[^/]+)/?',
                     EventHandler,
                     dict(things=self.things, hosts=self.hosts),
-                ),
+                ],
             ]
 
         if isinstance(additional_routes, list):
             handlers = additional_routes + handlers
+
+        if self.base_path:
+            for h in handlers:
+                h[0] = self.base_path + h[0]
 
         self.app = tornado.web.Application(handlers)
         self.app.is_tls = ssl_options is not None

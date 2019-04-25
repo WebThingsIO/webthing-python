@@ -1,6 +1,11 @@
 """An observable, settable value interface."""
 
-from pyee import EventEmitter
+import sys
+
+if sys.version_info.major == 3:
+    from pyee import AsyncIOEventEmitter as EventEmitter
+else:
+    from pyee import EventEmitter
 
 
 class Value(EventEmitter):
