@@ -41,7 +41,7 @@ class SingleThing:
 
     def get_name(self):
         """Get the mDNS server name."""
-        return self.thing.name
+        return self.thing.title
 
 
 class MultipleThings:
