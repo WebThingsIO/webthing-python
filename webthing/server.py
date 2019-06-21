@@ -144,6 +144,17 @@ class ThingsHandler(BaseHandler):
                 'rel': 'alternate',
                 'href': '{}{}'.format(ws_href, thing.get_href()),
             })
+            description['base'] = '{}://{}{}'.format(
+                self.request.protocol,
+                self.request.headers.get('Host', ''),
+                thing.get_href()
+            )
+            description['securityDefinitions'] = {
+                'nosec_sc': {
+                    'scheme': 'nosec',
+                },
+            }
+            description['security'] = 'nosec_sc'
             descriptions.append(description)
 
         self.write(json.dumps(descriptions))
@@ -216,6 +227,17 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
             'rel': 'alternate',
             'href': '{}{}'.format(ws_href, self.thing.get_href()),
         })
+        description['base'] = '{}://{}{}'.format(
+            self.request.protocol,
+            self.request.headers.get('Host', ''),
+            self.thing.get_href()
+        )
+        description['securityDefinitions'] = {
+            'nosec_sc': {
+                'scheme': 'nosec',
+            },
+        }
+        description['security'] = 'nosec_sc'
 
         self.write(json.dumps(description))
         self.finish()

@@ -29,10 +29,13 @@ class ExampleDimmableLight(Thing):
     """A dimmable light that logs received commands to stdout."""
 
     def __init__(self):
-        Thing.__init__(self,
-                       'My Lamp',
-                       ['OnOffSwitch', 'Light'],
-                       'A web connected lamp')
+        Thing.__init__(
+            self,
+            'urn:dev:ops:my-lamp-1234',
+            'My Lamp',
+            ['OnOffSwitch', 'Light'],
+            'A web connected lamp'
+        )
 
         self.add_property(
             Property(self,
@@ -101,10 +104,13 @@ class FakeGpioHumiditySensor(Thing):
     """A humidity sensor which updates its measurement every few seconds."""
 
     def __init__(self):
-        Thing.__init__(self,
-                       'My Humidity Sensor',
-                       ['MultiLevelSensor'],
-                       'A web connected humidity sensor')
+        Thing.__init__(
+            self,
+            'urn:dev:ops:my-humidity-sensor-1234',
+            'My Humidity Sensor',
+            ['MultiLevelSensor'],
+            'A web connected humidity sensor'
+        )
 
         self.level = Value(0.0)
         self.add_property(
