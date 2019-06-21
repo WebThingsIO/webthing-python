@@ -9,10 +9,11 @@ import tornado.websocket
 class Thing:
     """A Web Thing."""
 
-    def __init__(self, title, type_=[], description=''):
+    def __init__(self, id_, title, type_=[], description=''):
         """
         Initialize the object.
 
+        id_ -- the thing's unique ID - must be a URI
         title -- the thing's title
         type_ -- the thing's type(s)
         description -- description of the thing
@@ -20,6 +21,7 @@ class Thing:
         if not isinstance(type_, list):
             type_ = [type_]
 
+        self.id = id_
         self.context = 'https://iot.mozilla.org/schemas'
         self.type = type_
         self.title = title
@@ -40,8 +42,8 @@ class Thing:
         Returns the state as a dictionary.
         """
         thing = {
+            'id': self.id,
             'title': self.title,
-            'href': self.href_prefix if self.href_prefix else '/',
             '@context': self.context,
             '@type': self.type,
             'properties': self.get_property_descriptions(),
@@ -126,6 +128,14 @@ class Thing:
         href -- the href
         """
         self.ui_href = href
+
+    def get_id(self):
+        """
+        Get the ID of the thing.
+
+        Returns the ID as a string.
+        """
+        return self.id
 
     def get_title(self):
         """

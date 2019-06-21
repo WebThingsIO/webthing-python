@@ -54,7 +54,12 @@ First we create a new Thing:
 
 .. code:: python
 
-    light = Thing('My Lamp', ['OnOffSwitch', 'Light'], 'A web connected lamp')
+    light = Thing(
+        'urn:dev:ops:my-lamp-1234',
+        'My Lamp',
+        ['OnOffSwitch', 'Light'],
+        'A web connected lamp'
+    )
 
 Now we can add the required properties.
 
@@ -122,9 +127,12 @@ First we create a new Thing:
 
 .. code:: python
 
-  sensor = Thing('My Humidity Sensor',
-                 ['MultiLevelSensor'],
-                 'A web connected humidity sensor')
+  sensor = Thing(
+      'urn:dev:ops:my-humidity-sensor-1234',
+      'My Humidity Sensor',
+       ['MultiLevelSensor'],
+       'A web connected humidity sensor'
+  )
 
 Then we create and add the appropriate property:
 
