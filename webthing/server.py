@@ -140,6 +140,7 @@ class ThingsHandler(BaseHandler):
         descriptions = []
         for thing in self.things.get_things():
             description = thing.as_thing_description()
+            description['href'] = thing.get_href()
             description['links'].append({
                 'rel': 'alternate',
                 'href': '{}{}'.format(ws_href, thing.get_href()),
