@@ -1,8 +1,8 @@
 webthing
 ========
 
-.. image:: https://travis-ci.org/mozilla-iot/webthing-python.svg?branch=master
-    :target: https://travis-ci.org/mozilla-iot/webthing-python
+.. image:: https://github.com/mozilla-iot/webthing-python/workflows/Python%20package/badge.svg
+    :target: https://github.com/mozilla-iot/webthing-python/workflows/Python%20package
 .. image:: https://img.shields.io/pypi/v/webthing.svg
     :target: https://pypi.org/project/webthing/
 .. image:: https://img.shields.io/badge/license-MPL--2.0-blue.svg
