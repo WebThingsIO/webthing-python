@@ -44,7 +44,6 @@ class Thing:
         thing = {
             'id': self.id,
             'title': self.title,
-            'description': self.description,
             '@context': self.context,
             '@type': self.type,
             'properties': self.get_property_descriptions(),
@@ -91,11 +90,8 @@ class Thing:
                 'href': self.ui_href,
             })
 
-        if not self.description:
-            del thing['description']
-
-        if not self.context:
-            del thing['@context']
+        if self.description:
+            thing['description'] = self.description
 
         if not self.type:
             del thing['@type']
