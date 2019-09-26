@@ -45,7 +45,6 @@ class Thing:
             'id': self.id,
             'title': self.title,
             '@context': self.context,
-            '@type': self.type,
             'properties': self.get_property_descriptions(),
             'actions': {},
             'events': {},
@@ -92,6 +91,9 @@ class Thing:
 
         if self.description:
             thing['description'] = self.description
+
+        if self.type:
+            thing['@type'] = self.type
 
         return thing
 
