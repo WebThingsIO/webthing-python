@@ -3,8 +3,6 @@
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
-from .subscriber import Subscriber
-
 
 class Thing:
     """A Web Thing."""
