@@ -391,19 +391,19 @@ class Thing:
         }
         self.actions[name] = []
 
-    def add_subscriber(self, subscriber: Subscriber):
+    def add_subscriber(self, subscriber):
         """
         Add a new websocket subscriber.
 
-        ws -- the websocket
+        :param subscriber: Subscriber
         """
         self.subscribers.add(subscriber)
 
-    def remove_subscriber(self, subscriber: Subscriber):
+    def remove_subscriber(self, subscriber):
         """
         Remove a websocket subscriber.
 
-        ws -- the websocket
+        :param subscriber: Subscriber
         """
         if subscriber in self.subscribers:
             self.subscribers.remove(subscriber)
@@ -411,22 +411,22 @@ class Thing:
         for name in self.available_events:
             self.remove_event_subscriber(name, subscriber)
 
-    def add_event_subscriber(self, name, subscriber: Subscriber):
+    def add_event_subscriber(self, name, subscriber):
         """
         Add a new websocket subscriber to an event.
 
-        name -- name of the event
-        ws -- the websocket
+        :param name: Name of the event
+        :param subscriber: Subscriber
         """
         if name in self.available_events:
             self.available_events[name]['subscribers'].add(subscriber)
 
-    def remove_event_subscriber(self, name, subscriber: Subscriber):
+    def remove_event_subscriber(self, name, subscriber):
         """
         Remove a websocket subscriber from an event.
 
-        name -- name of the event
-        ws -- the websocket
+        :param name: Name of the event
+        :param subscriber: Subscriber
         """
         if name in self.available_events and \
                 subscriber in self.available_events[name]['subscribers']:
@@ -436,7 +436,7 @@ class Thing:
         """
         Notify all subscribers of a property change.
 
-        property_ -- the property that changed
+        :param property_: the property that changed
         """
         for subscriber in list(self.subscribers):
             subscriber.update_property(property_)
@@ -445,7 +445,7 @@ class Thing:
         """
         Notify all subscribers of an action status change.
 
-        action -- the action whose status changed
+        :param action: The action whose status changed
         """
         for subscriber in list(self.subscribers):
             subscriber.update_action(action)
@@ -454,7 +454,7 @@ class Thing:
         """
         Notify all subscribers of an event.
 
-        event -- the event that occurred
+        :param event: The event that occurred
         """
         if event.name not in self.available_events:
             return
