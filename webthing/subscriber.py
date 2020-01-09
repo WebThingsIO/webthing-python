@@ -1,21 +1,17 @@
 from abc import ABC, abstractmethod
 
-from .action import Action
-from .event import Event
-from .property import Property
-
 
 class Subscriber(ABC):
 
     @abstractmethod
-    def update(self) -> None:
+    def update(self):
         """
         Receive update from a Thing.
         """
         pass
 
     @abstractmethod
-    def update_property(self, property_: Property) -> None:
+    def update_property(self, property_):
         """
         Receive update from a Thing about an Property
 
@@ -24,7 +20,7 @@ class Subscriber(ABC):
         pass
 
     @abstractmethod
-    def update_action(self, action: Action) -> None:
+    def update_action(self, action):
         """
         Receive update from a Thing about an Action
 
@@ -33,7 +29,7 @@ class Subscriber(ABC):
         pass
 
     @abstractmethod
-    def update_event(self, event: Event) -> None:
+    def update_event(self, event):
         """
         Receive update from a Thing about an Event
 
