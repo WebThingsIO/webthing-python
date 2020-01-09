@@ -1,7 +1,12 @@
+"""High-level Subscriber base class implementation."""
+
 from abc import ABC, abstractmethod
 
 
 class Subscriber(ABC):
+    """
+    Abstract Subscriber class.
+    """
 
     @abstractmethod
     def update(self):
@@ -13,7 +18,7 @@ class Subscriber(ABC):
     @abstractmethod
     def update_property(self, property_):
         """
-        Receive update from a Thing about an Property
+        Receive update from a Thing about an Property.
 
         :param property_: Property
         """
@@ -22,7 +27,7 @@ class Subscriber(ABC):
     @abstractmethod
     def update_action(self, action):
         """
-        Receive update from a Thing about an Action
+        Receive update from a Thing about an Action.
 
         :param action: Action
         """
@@ -31,7 +36,7 @@ class Subscriber(ABC):
     @abstractmethod
     def update_event(self, event):
         """
-        Receive update from a Thing about an Event
+        Receive update from a Thing about an Event.
 
         :param event: Event
         """
