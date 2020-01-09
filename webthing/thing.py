@@ -2,8 +2,8 @@
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
-import json
-import tornado.websocket
+
+from .subscriber import Subscriber
 
 
 class Thing:
@@ -391,27 +391,27 @@ class Thing:
         }
         self.actions[name] = []
 
-    def add_subscriber(self, ws):
+    def add_subscriber(self, subscriber: Subscriber):
         """
         Add a new websocket subscriber.
 
         ws -- the websocket
         """
-        self.subscribers.add(ws)
+        self.subscribers.add(subscriber)
 
-    def remove_subscriber(self, ws):
+    def remove_subscriber(self, subscriber: Subscriber):
         """
         Remove a websocket subscriber.
 
         ws -- the websocket
         """
-        if ws in self.subscribers:
-            self.subscribers.remove(ws)
+        if subscriber in self.subscribers:
+            self.subscribers.remove(subscriber)
 
         for name in self.available_events:
-            self.remove_event_subscriber(name, ws)
+            self.remove_event_subscriber(name, subscriber)
 
-    def add_event_subscriber(self, name, ws):
+    def add_event_subscriber(self, name, subscriber: Subscriber):
         """
         Add a new websocket subscriber to an event.
 
@@ -419,9 +419,9 @@ class Thing:
         ws -- the websocket
         """
         if name in self.available_events:
-            self.available_events[name]['subscribers'].add(ws)
+            self.available_events[name]['subscribers'].add(subscriber)
 
-    def remove_event_subscriber(self, name, ws):
+    def remove_event_subscriber(self, name, subscriber: Subscriber):
         """
         Remove a websocket subscriber from an event.
 
@@ -429,8 +429,8 @@ class Thing:
         ws -- the websocket
         """
         if name in self.available_events and \
-                ws in self.available_events[name]['subscribers']:
-            self.available_events[name]['subscribers'].remove(ws)
+                subscriber in self.available_events[name]['subscribers']:
+            self.available_events[name]['subscribers'].remove(subscriber)
 
     def property_notify(self, property_):
         """
@@ -438,18 +438,8 @@ class Thing:
 
         property_ -- the property that changed
         """
-        message = json.dumps({
-            'messageType': 'propertyStatus',
-            'data': {
-                property_.name: property_.get_value(),
-            }
-        })
-
         for subscriber in list(self.subscribers):
-            try:
-                subscriber.write_message(message)
-            except tornado.websocket.WebSocketClosedError:
-                pass
+            subscriber.update_property(property_)
 
     def action_notify(self, action):
         """
@@ -457,16 +447,8 @@ class Thing:
 
         action -- the action whose status changed
         """
-        message = json.dumps({
-            'messageType': 'actionStatus',
-            'data': action.as_action_description(),
-        })
-
         for subscriber in list(self.subscribers):
-            try:
-                subscriber.write_message(message)
-            except tornado.websocket.WebSocketClosedError:
-                pass
+            subscriber.update_action(action)
 
     def event_notify(self, event):
         """
@@ -477,13 +459,5 @@ class Thing:
         if event.name not in self.available_events:
             return
 
-        message = json.dumps({
-            'messageType': 'event',
-            'data': event.as_event_description(),
-        })
-
         for subscriber in self.available_events[event.name]['subscribers']:
-            try:
-                subscriber.write_message(message)
-            except tornado.websocket.WebSocketClosedError:
-                pass
+            subscriber.update_event(event)

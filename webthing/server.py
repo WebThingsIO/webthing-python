@@ -11,6 +11,7 @@ import tornado.web
 import tornado.websocket
 
 from .errors import PropertyError
+from .subscriber import Subscriber
 from .utils import get_addresses, get_ip
 
 
@@ -161,7 +162,7 @@ class ThingsHandler(BaseHandler):
         self.write(json.dumps(descriptions))
 
 
-class ThingHandler(tornado.websocket.WebSocketHandler):
+class ThingHandler(tornado.websocket.WebSocketHandler, Subscriber):
     """Handle a request to /."""
 
     def initialize(self, things, hosts):
@@ -340,6 +341,53 @@ class ThingHandler(tornado.websocket.WebSocketHandler):
     def check_origin(self, origin):
         """Allow connections from all origins."""
         return True
+
+    def update(self):
+        """
+        Receive update from a Thing.
+        """
+        pass
+
+    def update_property(self, property_):
+        """
+        Receive update from a Thing about an Property
+
+        :param property_: Property
+        """
+        message = json.dumps({
+            'messageType': 'propertyStatus',
+            'data': {
+                property_.name: property_.get_value(),
+            }
+        })
+
+        self.write_message(message)
+
+    def update_action(self, action):
+        """
+        Receive update from a Thing about an Action
+
+        :param action: Action
+        """
+        message = json.dumps({
+            'messageType': 'actionStatus',
+            'data': action.as_action_description(),
+        })
+
+        self.write_message(message)
+
+    def update_event(self, event):
+        """
+        Receive update from a Thing about an Event
+
+        :param event: Event
+        """
+        message = json.dumps({
+            'messageType': 'event',
+            'data': event.as_event_description(),
+        })
+
+        self.write_message(message)
 
 
 class PropertiesHandler(BaseHandler):
