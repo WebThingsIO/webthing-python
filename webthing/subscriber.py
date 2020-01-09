@@ -4,15 +4,11 @@ from abc import ABC, abstractmethod
 
 
 class Subscriber(ABC):
-    """
-    Abstract Subscriber class.
-    """
+    """Abstract Subscriber class."""
 
     @abstractmethod
     def update(self):
-        """
-        Receive update from a Thing.
-        """
+        """Receive update from a Thing."""
         pass
 
     @abstractmethod
