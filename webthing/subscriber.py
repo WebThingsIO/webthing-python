@@ -4,13 +4,9 @@
 class Subscriber:
     """Abstract Subscriber class."""
 
-    def update(self):
-        """Receive update from a Thing."""
-        raise NotImplementedError
-
     def update_property(self, property_):
         """
-        Receive update from a Thing about an Property.
+        Send an update about a Property.
 
         :param property_: Property
         """
@@ -18,7 +14,7 @@ class Subscriber:
 
     def update_action(self, action):
         """
-        Receive update from a Thing about an Action.
+        Send an update about an Action.
 
         :param action: Action
         """
@@ -26,7 +22,7 @@ class Subscriber:
 
     def update_event(self, event):
         """
-        Receive update from a Thing about an Event.
+        Send an update about an Event.
 
         :param event: Event
         """
