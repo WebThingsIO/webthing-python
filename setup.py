@@ -39,7 +39,7 @@ elif sys.version_info.major == 3:
 
 setup(
     name='webthing',
-    version='0.12.0',
+    version='0.12.1',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',
@@ -57,6 +57,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     license='MPL-2.0',
     project_urls={
