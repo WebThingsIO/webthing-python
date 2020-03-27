@@ -5,7 +5,7 @@ import sys
 if sys.version_info.major == 3:
     from pyee import AsyncIOEventEmitter as EventEmitter
 else:
-    from pyee import EventEmitter
+    from pyee import BaseEventEmitter as EventEmitter
 
 
 class Value(EventEmitter):

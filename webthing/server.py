@@ -122,6 +122,10 @@ class BaseHandler(tornado.web.RequestHandler):
         self.set_header('Access-Control-Allow-Methods',
                         'GET, HEAD, PUT, POST, DELETE')
 
+    def options(self, *args, **kwargs):
+        """Handle an OPTIONS request."""
+        self.set_status(204)
+
 
 class ThingsHandler(BaseHandler):
     """Handle a request to / when the server manages multiple things."""
@@ -190,6 +194,10 @@ class ThingHandler(tornado.websocket.WebSocketHandler, Subscriber):
                         'Origin, X-Requested-With, Content-Type, Accept')
         self.set_header('Access-Control-Allow-Methods',
                         'GET, HEAD, PUT, POST, DELETE')
+
+    def options(self, *args, **kwargs):
+        """Handle an OPTIONS request."""
+        self.set_status(204)
 
     def get_thing(self, thing_id):
         """
