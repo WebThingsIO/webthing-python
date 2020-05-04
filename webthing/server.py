@@ -504,24 +504,31 @@ class ActionsHandler(BaseHandler):
             self.set_status(400)
             return
 
-        response = {}
-        for action_name, action_params in message.items():
-            input_ = None
-            if 'input' in action_params:
-                input_ = action_params['input']
+        keys = list(message.keys())
+        if len(keys) != 1:
+            self.set_status(400)
+            return
 
-            action = thing.perform_action(action_name, input_)
-            if action:
-                response.update(action.as_action_description())
+        action_name = keys[0]
+        action_params = message[action_name]
+        input_ = None
+        if 'input' in action_params:
+            input_ = action_params['input']
 
-                # Start the action
-                tornado.ioloop.IOLoop.current().spawn_callback(
-                    perform_action,
-                    action,
-                )
+        action = thing.perform_action(action_name, input_)
+        if action:
+            response = action.as_action_description()
 
-        self.set_status(201)
-        self.write(json.dumps(response))
+            # Start the action
+            tornado.ioloop.IOLoop.current().spawn_callback(
+                perform_action,
+                action,
+            )
+
+            self.set_status(201)
+            self.write(json.dumps(response))
+        else:
+            self.set_status(400)
 
 
 class ActionHandler(BaseHandler):
@@ -560,27 +567,34 @@ class ActionHandler(BaseHandler):
             self.set_status(400)
             return
 
-        response = {}
-        for name, action_params in message.items():
-            if name != action_name:
-                continue
+        keys = list(message.keys())
+        if len(keys) != 1:
+            self.set_status(400)
+            return
 
-            input_ = None
-            if 'input' in action_params:
-                input_ = action_params['input']
+        if keys[0] != action_name:
+            self.set_status(400)
+            return
 
-            action = thing.perform_action(name, input_)
-            if action:
-                response.update(action.as_action_description())
+        action_params = message[action_name]
+        input_ = None
+        if 'input' in action_params:
+            input_ = action_params['input']
 
-                # Start the action
-                tornado.ioloop.IOLoop.current().spawn_callback(
-                    perform_action,
-                    action,
-                )
+        action = thing.perform_action(action_name, input_)
+        if action:
+            response = action.as_action_description()
 
-        self.set_status(201)
-        self.write(json.dumps(response))
+            # Start the action
+            tornado.ioloop.IOLoop.current().spawn_callback(
+                perform_action,
+                action,
+            )
+
+            self.set_status(201)
+            self.write(json.dumps(response))
+        else:
+            self.set_status(400)
 
 
 class ActionIDHandler(BaseHandler):
