@@ -27,12 +27,12 @@ elif sys.version_info.major == 3:
     requirements.extend([
         'jsonschema>=3.2.0',
         'tornado>=6.0.0',
-        'zeroconf>=0.26.0',
+        'zeroconf>=0.27.0',
     ])
 
 setup(
     name='webthing',
-    version='0.13.0',
+    version='0.13.1',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',
