@@ -3,6 +3,7 @@
 from zeroconf import ServiceInfo, Zeroconf
 import json
 import socket
+import sys
 import tornado.concurrent
 import tornado.gen
 import tornado.httpserver
@@ -853,15 +854,24 @@ class WebThingServer:
 
     def start(self):
         """Start listening for incoming connections."""
-        self.service_info = ServiceInfo(
+        args = [
             '_webthing._tcp.local.',
             '{}._webthing._tcp.local.'.format(self.name),
-            address=socket.inet_aton(get_ip()),
-            port=self.port,
-            properties={
+        ]
+        kwargs = {
+            'port': self.port,
+            'properties': {
                 'path': '/',
             },
-            server='{}.local.'.format(socket.gethostname()))
+            'server': '{}.local.'.format(socket.gethostname()),
+        }
+
+        if sys.version_info.major == 3:
+            kwargs['addresses'] = [socket.inet_aton(get_ip())]
+        else:
+            kwargs['address'] = socket.inet_aton(get_ip())
+
+        self.service_info = ServiceInfo(*args, **kwargs)
         self.zeroconf = Zeroconf()
         self.zeroconf.register_service(self.service_info)
 
