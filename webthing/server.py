@@ -866,6 +866,9 @@ class WebThingServer:
             'server': '{}.local.'.format(socket.gethostname()),
         }
 
+        if self.app.is_tls:
+            kwargs['properties']['tls'] = '1'
+
         if sys.version_info.major == 3:
             kwargs['addresses'] = [socket.inet_aton(get_ip())]
         else:

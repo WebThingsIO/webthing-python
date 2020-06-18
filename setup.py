@@ -32,7 +32,7 @@ elif sys.version_info.major == 3:
 
 setup(
     name='webthing',
-    version='0.13.1',
+    version='0.13.2',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/mozilla-iot/webthing-python',
