@@ -178,3 +178,8 @@ Now we have a sensor that constantly reports 0%. To make it usable, we need a th
           pass
 
 This will update our ``Value`` object with the sensor readings via the ``self.level.notify_of_external_update(read_from_gpio())`` call. The ``Value`` object now notifies the property and the thing that the value has changed, which in turn notifies all websocket listeners.
+
+Adding to Gateway
+=================
+
+To add your web thing to the WebThings Gateway, install the "Web Thing" add-on and follow the instructions `here <https://github.com/mozilla-iot/thing-url-adapter#readme>`_.
