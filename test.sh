@@ -6,7 +6,7 @@ flake8 webthing
 pydocstyle webthing
 
 # clone the webthing-tester
-git clone https://github.com/mozilla-iot/webthing-tester
+git clone https://github.com/WebThingsIO/webthing-tester
 pip install -r webthing-tester/requirements.txt
 
 # build and test the single-thing example

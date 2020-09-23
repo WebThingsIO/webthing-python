@@ -27,18 +27,18 @@ elif sys.version_info.major == 3:
     requirements.extend([
         'jsonschema>=3.2.0',
         'tornado>=6.0.0',
-        'zeroconf>=0.27.0',
+        'zeroconf>=0.28.0',
     ])
 
 setup(
     name='webthing',
-    version='0.13.2',
+    version='0.14.0',
     description='HTTP Web Thing implementation',
     long_description=long_description,
-    url='https://github.com/mozilla-iot/webthing-python',
-    author='Mozilla IoT',
-    author_email='iot@mozilla.com',
-    keywords='mozilla iot web thing webthing',
+    url='https://github.com/WebThingsIO/webthing-python',
+    author='WebThingsIO',
+    author_email='team@webthings.io',
+    keywords='iot web thing webthing',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=requirements,
     classifiers=[
@@ -53,8 +53,8 @@ setup(
     ],
     license='MPL-2.0',
     project_urls={
-        'Source': 'https://github.com/mozilla-iot/webthing-python',
-        'Tracker': 'https://github.com/mozilla-iot/webthing-python/issues',
+        'Source': 'https://github.com/WebThingsIO/webthing-python',
+        'Tracker': 'https://github.com/WebThingsIO/webthing-python/issues',
     },
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4',
 )

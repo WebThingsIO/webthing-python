@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.14.0] - 2020-09-23
+### Changed
+- Update author and URLs to indicate new project home.
+
+## [0.13.2] - 2020-06-18
+### Changed
+- mDNS record now indicates TLS support.
+
 ## [0.13.1] - 2020-05-29
 ### Changed
 - Support new zeroconf version
@@ -47,16 +55,16 @@
 
 ## [0.10.0] - 2018-11-30
 ### Changed
-- Property, Action, and Event description now use `links` rather than `href`. - [Spec PR](https://github.com/mozilla-iot/wot/pull/119)
+- Property, Action, and Event description now use `links` rather than `href`. - [Spec PR](https://github.com/WebThingsIO/wot/pull/119)
 
-[Unreleased]: https://github.com/mozilla-iot/webthing-python/compare/v0.13.1...HEAD
-[0.13.0]: https://github.com/mozilla-iot/webthing-python/compare/v0.13.0...v0.13.1
-[0.13.0]: https://github.com/mozilla-iot/webthing-python/compare/v0.12.2...v0.13.0
-[0.12.2]: https://github.com/mozilla-iot/webthing-python/compare/v0.12.1...v0.12.2
-[0.12.1]: https://github.com/mozilla-iot/webthing-python/compare/v0.12.0...v0.12.1
-[0.12.0]: https://github.com/mozilla-iot/webthing-python/compare/v0.11.3...v0.12.0
-[0.11.3]: https://github.com/mozilla-iot/webthing-python/compare/v0.11.2...v0.11.3
-[0.11.2]: https://github.com/mozilla-iot/webthing-python/compare/v0.11.1...v0.11.2
-[0.11.1]: https://github.com/mozilla-iot/webthing-python/compare/v0.11.0...v0.11.1
-[0.11.0]: https://github.com/mozilla-iot/webthing-python/compare/v0.10.0...v0.11.0
-[0.10.0]: https://github.com/mozilla-iot/webthing-python/compare/v0.9.2...v0.10.0
+[Unreleased]: https://github.com/WebThingsIO/webthing-python/compare/v0.13.1...HEAD
+[0.13.0]: https://github.com/WebThingsIO/webthing-python/compare/v0.13.0...v0.13.1
+[0.13.0]: https://github.com/WebThingsIO/webthing-python/compare/v0.12.2...v0.13.0
+[0.12.2]: https://github.com/WebThingsIO/webthing-python/compare/v0.12.1...v0.12.2
+[0.12.1]: https://github.com/WebThingsIO/webthing-python/compare/v0.12.0...v0.12.1
+[0.12.0]: https://github.com/WebThingsIO/webthing-python/compare/v0.11.3...v0.12.0
+[0.11.3]: https://github.com/WebThingsIO/webthing-python/compare/v0.11.2...v0.11.3
+[0.11.2]: https://github.com/WebThingsIO/webthing-python/compare/v0.11.1...v0.11.2
+[0.11.1]: https://github.com/WebThingsIO/webthing-python/compare/v0.11.0...v0.11.1
+[0.11.0]: https://github.com/WebThingsIO/webthing-python/compare/v0.10.0...v0.11.0
+[0.10.0]: https://github.com/WebThingsIO/webthing-python/compare/v0.9.2...v0.10.0

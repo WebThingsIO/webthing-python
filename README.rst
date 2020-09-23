@@ -1,12 +1,12 @@
 webthing
 ========
 
-.. image:: https://github.com/mozilla-iot/webthing-python/workflows/Python%20package/badge.svg
-    :target: https://github.com/mozilla-iot/webthing-python/workflows/Python%20package
+.. image:: https://github.com/WebThingsIO/webthing-python/workflows/Python%20package/badge.svg
+    :target: https://github.com/WebThingsIO/webthing-python/workflows/Python%20package
 .. image:: https://img.shields.io/pypi/v/webthing.svg
     :target: https://pypi.org/project/webthing/
 .. image:: https://img.shields.io/badge/license-MPL--2.0-blue.svg
-    :target: https://github.com/mozilla-iot/webthing-python/blob/master/LICENSE.txt
+    :target: https://github.com/WebThingsIO/webthing-python/blob/master/LICENSE.txt
 
 Implementation of an HTTP `Web Thing <https://iot.mozilla.org/wot/>`_. This library is compatible with Python 2.7 and 3.5+.
 
@@ -24,7 +24,7 @@ Running the Sample
 
 .. code:: shell
 
-  $ wget https://raw.githubusercontent.com/mozilla-iot/webthing-python/master/example/single-thing.py
+  $ wget https://raw.githubusercontent.com/WebThingsIO/webthing-python/master/example/single-thing.py
   $ python3 single-thing.py
 
 This starts a server and lets you search for it from your gateway through mDNS. To add it to your gateway, navigate to the Things page in the gateway's UI and click the + icon at the bottom right. If both are on the same network, the example thing will automatically appear.
@@ -32,7 +32,7 @@ This starts a server and lets you search for it from your gateway through mDNS. 
 Example Implementation
 ======================
 
-In this code-walkthrough we will set up a dimmable light and a humidity sensor (both using fake data, of course). Both working examples can be found in `here <https://github.com/mozilla-iot/webthing-python/tree/master/example>`_.
+In this code-walkthrough we will set up a dimmable light and a humidity sensor (both using fake data, of course). Both working examples can be found in `here <https://github.com/WebThingsIO/webthing-python/tree/master/example>`_.
 
 Dimmable Light
 --------------
@@ -182,4 +182,4 @@ This will update our ``Value`` object with the sensor readings via the ``self.le
 Adding to Gateway
 =================
 
-To add your web thing to the WebThings Gateway, install the "Web Thing" add-on and follow the instructions `here <https://github.com/mozilla-iot/thing-url-adapter#readme>`_.
+To add your web thing to the WebThings Gateway, install the "Web Thing" add-on and follow the instructions `here <https://github.com/WebThingsIO/thing-url-adapter#readme>`_.
