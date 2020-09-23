@@ -32,7 +32,7 @@ This starts a server and lets you search for it from your gateway through mDNS. 
 Example Implementation
 ======================
 
-In this code-walkthrough we will set up a dimmable light and a humidity sensor (both using fake data, of course). Both working examples can be found in `here <https://github.com/WebThingsIO/webthing-python/tree/master/example>`_.
+In this code-walkthrough we will set up a dimmable light and a humidity sensor (both using fake data, of course). Both working examples can be found in the `examples directory <https://github.com/WebThingsIO/webthing-python/tree/master/example>`_.
 
 Dimmable Light
 --------------
