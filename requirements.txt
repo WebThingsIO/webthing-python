@@ -1,8 +1,5 @@
 ifaddr>=0.1.0
-jsonschema==2.6.*; python_version == '2.7'
-jsonschema>=3.2.0; python_version >= '3.5'
-pyee>=7.0.0
-tornado==5.1.*; python_version == '2.7'
-tornado>=6.0.0; python_version >= '3.5'
-zeroconf==0.19.*; python_version == '2.7'
-zeroconf>=0.28.0; python_version >= '3.5'
+jsonschema>=3.2.0
+pyee>=8.0.0
+tornado>=6.0.0
+zeroconf>=0.28.0

@@ -4,6 +4,7 @@
 
 ## [0.14.0] - 2020-09-23
 ### Changed
+- Dropped Python 2.7 support.
 - Update author and URLs to indicate new project home.
 
 ## [0.13.2] - 2020-06-18
@@ -57,8 +58,10 @@
 ### Changed
 - Property, Action, and Event description now use `links` rather than `href`. - [Spec PR](https://github.com/WebThingsIO/wot/pull/119)
 
-[Unreleased]: https://github.com/WebThingsIO/webthing-python/compare/v0.13.1...HEAD
-[0.13.0]: https://github.com/WebThingsIO/webthing-python/compare/v0.13.0...v0.13.1
+[Unreleased]: https://github.com/WebThingsIO/webthing-python/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/WebThingsIO/webthing-python/compare/v0.13.2...v0.14.0
+[0.13.2]: https://github.com/WebThingsIO/webthing-python/compare/v0.13.1...v0.13.2
+[0.13.1]: https://github.com/WebThingsIO/webthing-python/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/WebThingsIO/webthing-python/compare/v0.12.2...v0.13.0
 [0.12.2]: https://github.com/WebThingsIO/webthing-python/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/WebThingsIO/webthing-python/compare/v0.12.0...v0.12.1
