@@ -3,6 +3,7 @@
 from zeroconf import ServiceInfo, Zeroconf
 import json
 import socket
+import sys
 import tornado.concurrent
 import tornado.gen
 import tornado.httpserver
@@ -13,6 +14,7 @@ import tornado.websocket
 from .errors import PropertyError
 from .subscriber import Subscriber
 from .utils import get_addresses, get_ip
+from .jwtauth import jwtauth
 
 
 @tornado.gen.coroutine
@@ -118,7 +120,7 @@ class BaseHandler(tornado.web.RequestHandler):
         """Set the default headers for all requests."""
         self.set_header('Access-Control-Allow-Origin', '*')
         self.set_header('Access-Control-Allow-Headers',
-                        'Origin, X-Requested-With, Content-Type, Accept')
+                        'Origin, X-Requested-With, Content-Type, Accept, Authorization')
         self.set_header('Access-Control-Allow-Methods',
                         'GET, HEAD, PUT, POST, DELETE')
 
@@ -127,6 +129,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self.set_status(204)
 
 
+@jwtauth
 class ThingsHandler(BaseHandler):
     """Handle a request to / when the server manages multiple things."""
 
@@ -166,6 +169,7 @@ class ThingsHandler(BaseHandler):
         self.write(json.dumps(descriptions))
 
 
+@jwtauth
 class ThingHandler(tornado.websocket.WebSocketHandler, Subscriber):
     """Handle a request to /."""
 
@@ -191,7 +195,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler, Subscriber):
         """Set the default headers for all requests."""
         self.set_header('Access-Control-Allow-Origin', '*')
         self.set_header('Access-Control-Allow-Headers',
-                        'Origin, X-Requested-With, Content-Type, Accept')
+                        'Origin, X-Requested-With, Content-Type, Accept, Authorization')
         self.set_header('Access-Control-Allow-Methods',
                         'GET, HEAD, PUT, POST, DELETE')
 
@@ -392,6 +396,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler, Subscriber):
         self.write_message(message)
 
 
+@jwtauth
 class PropertiesHandler(BaseHandler):
     """Handle a request to /properties."""
 
@@ -410,6 +415,7 @@ class PropertiesHandler(BaseHandler):
         self.write(json.dumps(thing.get_properties()))
 
 
+@jwtauth
 class PropertyHandler(BaseHandler):
     """Handle a request to /properties/<property>."""
 
@@ -470,6 +476,7 @@ class PropertyHandler(BaseHandler):
             self.set_status(404)
 
 
+@jwtauth
 class ActionsHandler(BaseHandler):
     """Handle a request to /actions."""
 
@@ -531,6 +538,7 @@ class ActionsHandler(BaseHandler):
             self.set_status(400)
 
 
+@jwtauth
 class ActionHandler(BaseHandler):
     """Handle a request to /actions/<action_name>."""
 
@@ -597,6 +605,7 @@ class ActionHandler(BaseHandler):
             self.set_status(400)
 
 
+@jwtauth
 class ActionIDHandler(BaseHandler):
     """Handle a request to /actions/<action_name>/<action_id>."""
 
@@ -657,6 +666,7 @@ class ActionIDHandler(BaseHandler):
             self.set_status(404)
 
 
+@jwtauth
 class EventsHandler(BaseHandler):
     """Handle a request to /events."""
 
@@ -675,6 +685,7 @@ class EventsHandler(BaseHandler):
         self.write(json.dumps(thing.get_event_descriptions()))
 
 
+@jwtauth
 class EventHandler(BaseHandler):
     """Handle a request to /events/<event_name>."""
 
@@ -858,7 +869,6 @@ class WebThingServer:
             '{}._webthing._tcp.local.'.format(self.name),
         ]
         kwargs = {
-            'addresses': [socket.inet_aton(get_ip())],
             'port': self.port,
             'properties': {
                 'path': '/',
@@ -868,6 +878,11 @@ class WebThingServer:
 
         if self.app.is_tls:
             kwargs['properties']['tls'] = '1'
+
+        if sys.version_info.major == 3:
+            kwargs['addresses'] = [socket.inet_aton(get_ip())]
+        else:
+            kwargs['address'] = socket.inet_aton(get_ip())
 
         self.service_info = ServiceInfo(*args, **kwargs)
         self.zeroconf = Zeroconf()
