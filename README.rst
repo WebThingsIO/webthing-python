@@ -20,7 +20,7 @@ m2ag-labs fork:
 - Secret is shared with auth api to generate jwt
 - If enable set to false jwts will not be checked.
 - Server must be restarted if config changed.
-
+- Generate tokens with code simialar to `this <https://github.com/m2ag-labs/m2ag-thing/blob/master/api/helpers/auth.py>`_
 
 
 Installation
@@ -43,3 +43,7 @@ Running the Sample
 ==================
 
 Please see the `source repo <https://github.com/WebThingsIO/webthing-python>`_ for instructions on the sample.
+
+Credits
+=======
+`jwt code based on work by Paulo Rodrigues <https://github.com/paulorodriguesxv/tornado-json-web-token-jwt>`_
