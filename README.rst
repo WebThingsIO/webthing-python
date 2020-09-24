@@ -20,7 +20,7 @@ m2ag-labs fork:
 - Secret is shared with auth api to generate jwt
 - If enable set to false jwts will not be checked.
 - Server must be restarted if config changed.
-- Generate tokens with code simialar to `this <https://github.com/m2ag-labs/m2ag-thing/blob/master/api/helpers/auth.py>`_
+- Generate tokens with code similar to `this <https://github.com/m2ag-labs/m2ag-thing/blob/master/api/helpers/auth.py>`_
 
 
 Installation
