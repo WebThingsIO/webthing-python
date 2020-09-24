@@ -29,7 +29,7 @@ First - uninstall webthing python if already installed
 
 .. code:: shell
 
-  $ pip3 remove webthing
+  $ pip3 uninstall webthing
 
 
 Then - ``webthing`` fork must be installed via ``git``, as such:
