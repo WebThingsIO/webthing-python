@@ -22,6 +22,9 @@ m2ag-labs fork:
 - Server must be restarted if config changed.
 - Generate tokens with code similar to `this <https://github.com/m2ag-labs/m2ag-thing/blob/master/api/helpers/auth.py>`_
 
+Gateway Support
+===============
+A fork of the thing-url-adapter supporting jwt can be found `here <https://github.com/m2ag-labs/thing-url-adapter>`_.
 
 Installation
 ============
