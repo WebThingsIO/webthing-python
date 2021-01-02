@@ -14,7 +14,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='webthing',
-    version='0.14.0',
+    version='0.15.0',
     description='HTTP Web Thing implementation',
     long_description=long_description,
     url='https://github.com/WebThingsIO/webthing-python',
@@ -24,9 +24,9 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[
         'ifaddr>=0.1.0',
-        'pyee>=8.0.0',
         'jsonschema>=3.2.0',
-        'tornado>=6.0.0',
+        'pyee>=8.1.0',
+        'tornado>=6.1.0',
         'zeroconf>=0.28.0',
     ],
     classifiers=[
@@ -37,6 +37,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
     license='MPL-2.0',
     project_urls={

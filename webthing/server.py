@@ -86,20 +86,25 @@ class MultipleThings:
 class BaseHandler(tornado.web.RequestHandler):
     """Base handler that is initialized with a thing."""
 
-    def initialize(self, things, hosts):
+    def initialize(self, things, hosts, disable_host_validation):
         """
         Initialize the handler.
 
         things -- list of Things managed by this server
         hosts -- list of allowed hostnames
+        disable_host_validation -- whether or not to disable host validation --
+                                   note that this can lead to DNS rebinding
+                                   attacks
         """
         self.things = things
         self.hosts = hosts
+        self.disable_host_validation = disable_host_validation
 
     def prepare(self):
         """Validate Host header."""
         host = self.request.headers.get('Host', None)
-        if host is not None and host.lower() in self.hosts:
+        if self.disable_host_validation or (
+                host is not None and host in self.hosts):
             return
 
         raise tornado.web.HTTPError(403)
@@ -169,20 +174,25 @@ class ThingsHandler(BaseHandler):
 class ThingHandler(tornado.websocket.WebSocketHandler, Subscriber):
     """Handle a request to /."""
 
-    def initialize(self, things, hosts):
+    def initialize(self, things, hosts, disable_host_validation):
         """
         Initialize the handler.
 
         things -- list of Things managed by this server
         hosts -- list of allowed hostnames
+        disable_host_validation -- whether or not to disable host validation --
+                                   note that this can lead to DNS rebinding
+                                   attacks
         """
         self.things = things
         self.hosts = hosts
+        self.disable_host_validation = disable_host_validation
 
     def prepare(self):
         """Validate Host header."""
         host = self.request.headers.get('Host', None)
-        if host is not None and host in self.hosts:
+        if self.disable_host_validation or (
+                host is not None and host in self.hosts):
             return
 
         raise tornado.web.HTTPError(403)
@@ -699,7 +709,8 @@ class WebThingServer:
     """Server to represent a Web Thing over HTTP."""
 
     def __init__(self, things, port=80, hostname=None, ssl_options=None,
-                 additional_routes=None, base_path=''):
+                 additional_routes=None, base_path='',
+                 disable_host_validation=False):
         """
         Initialize the WebThingServer.
 
@@ -713,12 +724,16 @@ class WebThingServer:
         ssl_options -- dict of SSL options to pass to the tornado server
         additional_routes -- list of additional routes to add to the server
         base_path -- base URL path to use, rather than '/'
+        disable_host_validation -- whether or not to disable host validation --
+                                   note that this can lead to DNS rebinding
+                                   attacks
         """
         self.things = things
         self.name = things.get_name()
         self.port = port
         self.hostname = hostname
         self.base_path = base_path.rstrip('/')
+        self.disable_host_validation = disable_host_validation
 
         system_hostname = socket.gethostname().lower()
         self.hosts = [
@@ -749,49 +764,85 @@ class WebThingServer:
                 [
                     r'/?',
                     ThingsHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/(?P<thing_id>\d+)/?',
                     ThingHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/(?P<thing_id>\d+)/properties/?',
                     PropertiesHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/(?P<thing_id>\d+)/properties/' +
                     r'(?P<property_name>[^/]+)/?',
                     PropertyHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/(?P<thing_id>\d+)/actions/?',
                     ActionsHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/(?P<thing_id>\d+)/actions/(?P<action_name>[^/]+)/?',
                     ActionHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/(?P<thing_id>\d+)/actions/' +
                     r'(?P<action_name>[^/]+)/(?P<action_id>[^/]+)/?',
                     ActionIDHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/(?P<thing_id>\d+)/events/?',
                     EventsHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/(?P<thing_id>\d+)/events/(?P<event_name>[^/]+)/?',
                     EventHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
             ]
         else:
@@ -800,42 +851,74 @@ class WebThingServer:
                 [
                     r'/?',
                     ThingHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/properties/?',
                     PropertiesHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/properties/(?P<property_name>[^/]+)/?',
                     PropertyHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/actions/?',
                     ActionsHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/actions/(?P<action_name>[^/]+)/?',
                     ActionHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/actions/(?P<action_name>[^/]+)/(?P<action_id>[^/]+)/?',
                     ActionIDHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/events/?',
                     EventsHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
                 [
                     r'/events/(?P<event_name>[^/]+)/?',
                     EventHandler,
-                    dict(things=self.things, hosts=self.hosts),
+                    dict(
+                        things=self.things,
+                        hosts=self.hosts,
+                        disable_host_validation=self.disable_host_validation,
+                    ),
                 ],
             ]
 
