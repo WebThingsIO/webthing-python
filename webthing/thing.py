@@ -20,7 +20,7 @@ class Thing:
             type_ = [type_]
 
         self.id = id_
-        self.context = 'https://iot.mozilla.org/schemas'
+        self.context = 'https://webthings.io/schemas'
         self.type = type_
         self.title = title
         self.description = description
