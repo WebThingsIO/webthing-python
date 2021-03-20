@@ -53,10 +53,10 @@ class Property:
         """
         description = deepcopy(self.metadata)
 
-        if 'links' not in description:
-            description['links'] = []
+        if 'forms' not in description:
+            description['forms'] = []
 
-        description['links'].append(
+        description['forms'].append(
             {
                 'rel': 'property',
                 'href': self.href_prefix + self.href,

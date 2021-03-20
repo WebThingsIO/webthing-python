@@ -151,7 +151,7 @@ class ThingsHandler(BaseHandler):
         for thing in self.things.get_things():
             description = thing.as_thing_description()
             description['href'] = thing.get_href()
-            description['links'].append({
+            description['forms'].append({
                 'rel': 'alternate',
                 'href': '{}{}'.format(ws_href, thing.get_href()),
             })
@@ -243,7 +243,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler, Subscriber):
         )
 
         description = self.thing.as_thing_description()
-        description['links'].append({
+        description['forms'].append({
             'rel': 'alternate',
             'href': '{}{}'.format(ws_href, self.thing.get_href()),
         })
