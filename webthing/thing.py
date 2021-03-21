@@ -66,7 +66,7 @@ class Thing:
             thing['actions'][name] = action['metadata']
             thing['actions'][name]['forms'] = [
                 {
-                    'rel': 'action',
+                    'op': ['invokeaction'],
                     'href': '{}/actions/{}'.format(self.href_prefix, name),
                 },
             ]
@@ -75,7 +75,7 @@ class Thing:
             thing['events'][name] = event['metadata']
             thing['events'][name]['forms'] = [
                 {
-                    'rel': 'event',
+                    'op': ['subscribeevent', 'unsubscribeevent'],
                     'href': '{}/events/{}'.format(self.href_prefix, name),
                 },
             ]
