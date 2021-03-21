@@ -56,9 +56,17 @@ class Property:
         if 'forms' not in description:
             description['forms'] = []
 
+        # TODO: The assumption is that all properties are at least readable - but that's probably not true
+        op = ['readproperty']
+        if not self.metadata.get('readOnly'):
+            op.append('writeproperty')
+
+        if self.metadata.get('observable'):
+            op.extend(('observeproperty', 'unobserveproperty'))
+
         description['forms'].append(
             {
-                'rel': 'property',
+                'op': op,
                 'href': self.href_prefix + self.href,
             }
         )
