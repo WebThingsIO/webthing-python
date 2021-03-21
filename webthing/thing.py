@@ -83,7 +83,7 @@ class Thing:
         if self.ui_href is not None:
             thing['forms'].append({
                 'rel': 'alternate',
-                'mediaType': 'text/html',
+                'type': 'text/html',
                 'href': self.ui_href,
             })
 
