@@ -40,7 +40,7 @@ Dimmable Light
 Imagine you have a dimmable light that you want to expose via the web of things API. The light can be turned on/off and the brightness can be set from 0% to 100%. Besides the name, description, and type, a |Light|_ is required to expose two properties:
 
 .. |Light| replace:: ``Light``
-.. _Light: https://iot.mozilla.org/schemas/#Light
+.. _Light: https://webthings.io/schemas/#Light
 
 * ``on``: the state of the light, whether it is turned on or off
 
@@ -121,7 +121,7 @@ Let's now also connect a humidity sensor to the server we set up for our light.
 A |MultiLevelSensor|_ (a sensor that returns a level instead of just on/off) has one required property (besides the name, type, and optional description): ``level``. We want to monitor this property and get notified if the value changes.
 
 .. |MultiLevelSensor| replace:: ``MultiLevelSensor``
-.. _MultiLevelSensor: https://iot.mozilla.org/schemas/#MultiLevelSensor
+.. _MultiLevelSensor: https://webthings.io/schemas/#MultiLevelSensor
 
 First we create a new Thing:
 
