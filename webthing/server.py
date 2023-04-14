@@ -151,7 +151,7 @@ class ThingsHandler(BaseHandler):
         for thing in self.things.get_things():
             description = thing.as_thing_description()
             description['href'] = thing.get_href()
-            description['links'].append({
+            description['forms'].append({
                 'rel': 'alternate',
                 'href': '{}{}'.format(ws_href, thing.get_href()),
             })
@@ -243,7 +243,7 @@ class ThingHandler(tornado.websocket.WebSocketHandler, Subscriber):
         )
 
         description = self.thing.as_thing_description()
-        description['links'].append({
+        description['forms'].append({
             'rel': 'alternate',
             'href': '{}{}'.format(ws_href, self.thing.get_href()),
         })
@@ -437,9 +437,7 @@ class PropertyHandler(BaseHandler):
 
         if thing.has_property(property_name):
             self.set_header('Content-Type', 'application/json')
-            self.write(json.dumps({
-                property_name: thing.get_property(property_name),
-            }))
+            self.write(json.dumps(thing.get_property(property_name)))
         else:
             self.set_status(404)
 
@@ -456,32 +454,26 @@ class PropertyHandler(BaseHandler):
             return
 
         try:
-            args = json.loads(self.request.body.decode())
+            value = json.loads(self.request.body.decode())
         except ValueError:
-            self.set_status(400)
-            return
-
-        if property_name not in args:
             self.set_status(400)
             return
 
         if thing.has_property(property_name):
             try:
-                thing.set_property(property_name, args[property_name])
+                thing.set_property(property_name, value)
             except PropertyError:
                 self.set_status(400)
                 return
 
             self.set_header('Content-Type', 'application/json')
-            self.write(json.dumps({
-                property_name: thing.get_property(property_name),
-            }))
+            self.write(json.dumps(thing.get_property(property_name)))
         else:
             self.set_status(404)
 
 
 class ActionsHandler(BaseHandler):
-    """Handle a request to /actions."""
+    """Handle a request to /actions."""  # TODO: Should this feature be removed?
 
     def get(self, thing_id='0'):
         """
@@ -572,24 +564,14 @@ class ActionHandler(BaseHandler):
             return
 
         try:
-            message = json.loads(self.request.body.decode())
+            input_ = json.loads(self.request.body.decode())
         except ValueError:
             self.set_status(400)
             return
 
-        keys = list(message.keys())
-        if len(keys) != 1:
-            self.set_status(400)
-            return
-
-        if keys[0] != action_name:
-            self.set_status(400)
-            return
-
-        action_params = message[action_name]
-        input_ = None
-        if 'input' in action_params:
-            input_ = action_params['input']
+        # Allow payloads wrapped inside `value` field
+        if 'value' in input_:
+            input_ = input_['value']
 
         action = thing.perform_action(action_name, input_)
         if action:
@@ -608,7 +590,7 @@ class ActionHandler(BaseHandler):
 
 
 class ActionIDHandler(BaseHandler):
-    """Handle a request to /actions/<action_name>/<action_id>."""
+    """Handle a request to /actions/<action_name>/<action_id>."""  # TODO: Should this feature be removed?
 
     def get(self, thing_id='0', action_name=None, action_id=None):
         """
